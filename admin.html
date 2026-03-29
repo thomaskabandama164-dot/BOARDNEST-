@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NestZM Admin — Property Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+<style>
+:root{
+  --bg:#0b0f18;--s1:#111827;--s2:#1a2030;--s3:#212840;--s4:#2a3347;
+  --gold:#c9922a;--gold2:#e0aa48;--gold-pale:rgba(201,146,42,.1);--gold-border:rgba(201,146,42,.25);
+  --green:#3aaa6a;--red:#e05555;--blue:#4f9cf9;--orange:#e88c30;--purple:#9b72cf;
+  --text:#dfe4ee;--text2:#7e8ba0;--border:#1e2a3b;
+  --radius:12px;--radius-lg:18px;
+  --shadow:0 4px 24px rgba(0,0,0,.35);--shadow-lg:0 12px 48px rgba(0,0,0,.5);
+  --tr:.2s cubic-bezier(.4,0,.2,1);
+  --sidebar:250px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+
+/* ── LOGIN ── */
+#loginScreen{position:fixed;inset:0;background:radial-gradient(ellipse at 30% 60%,rgba(201,146,42,.06),transparent 60%),linear-gradient(160deg,#0b0f18,#111827);display:flex;align-items:center;justify-content:center;z-index:999}
+.login-card{width:100%;max-width:400px;background:var(--s1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem;box-shadow:var(--shadow-lg)}
+.login-brand{display:flex;align-items:center;gap:.7rem;margin-bottom:1.85rem}
+.login-brand-icon{width:42px;height:42px;background:var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.15rem}
+.login-brand-text{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--text)}
+.login-brand-text span{color:var(--gold)}
+.admin-chip{display:inline-flex;align-items:center;gap:.4rem;background:var(--gold-pale);border:1px solid var(--gold-border);color:var(--gold);font-size:.72rem;font-weight:600;padding:.25rem .8rem;border-radius:99px;margin-bottom:1.4rem}
+.login-title{font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:.25rem}
+.login-sub{font-size:.8rem;color:var(--text2);margin-bottom:1.5rem}
+
+/* ── FORM ELEMENTS ── */
+.fg{margin-bottom:1rem}
+.fg label{display:block;font-size:.72rem;font-weight:700;color:var(--text2);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.5px}
+.fg .iw{position:relative}
+.fg .iw i{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--text2);font-size:.8rem;pointer-events:none}
+.fg input,.fg select,.fg textarea{width:100%;padding:.65rem .9rem .65rem 2.35rem;background:var(--s2);border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.875rem;color:var(--text);outline:none;transition:border-color var(--tr);resize:vertical}
+.fg input.no-icon,.fg select.no-icon,.fg textarea.no-icon{padding-left:.9rem}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gold)}
+.fg input::placeholder,.fg textarea::placeholder{color:var(--text2)}
+.fg select option{background:var(--s2)}
+.ferr{color:var(--red);font-size:.75rem;margin-top:.3rem;display:flex;align-items:center;gap:.3rem}
+.price-prefix{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--gold);font-size:.82rem;font-weight:700;pointer-events:none}
+.fg .price-input{padding-left:2.8rem}
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.25rem;border-radius:9px;font-family:'Inter',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer;border:none;transition:var(--tr);white-space:nowrap}
+.btn-gold{background:var(--gold);color:#fff}.btn-gold:hover{background:var(--gold2)}
+.btn-slate{background:var(--s3);color:var(--text);border:1px solid var(--border)}.btn-slate:hover{border-color:var(--gold);color:var(--gold)}
+.btn-danger{background:rgba(224,85,85,.12);color:var(--red);border:1px solid rgba(224,85,85,.25)}.btn-danger:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-edit{background:rgba(79,156,249,.12);color:var(--blue);border:1px solid rgba(79,156,249,.25)}.btn-edit:hover{background:var(--blue);color:#fff}
+.btn-green{background:rgba(58,170,106,.12);color:var(--green);border:1px solid rgba(58,170,106,.25)}.btn-green:hover{background:var(--green);color:#fff}
+.btn-purple{background:rgba(155,114,207,.12);color:var(--purple);border:1px solid rgba(155,114,207,.25)}.btn-purple:hover{background:var(--purple);color:#fff}
+.btn-sm{padding:.35rem .75rem;font-size:.75rem}
+.btn-full{width:100%;justify-content:center;padding:.75rem}
+
+/* ── SHELL ── */
+#shell{display:none}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar);background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
+.sb-logo{padding:1.4rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem}
+.sb-logo-icon{width:34px;height:34px;background:var(--gold);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.9rem}
+.sb-logo-text{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:700;color:var(--text)}
+.sb-logo-text span{color:var(--gold)}
+.sb-logo-sub{font-size:.65rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-left:auto}
+.sb-nav{flex:1;padding:1rem 0;overflow-y:auto}
+.sb-section{font-size:.62rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;padding:.5rem 1.5rem .25rem}
+.sb-item{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.5rem;cursor:pointer;transition:var(--tr);font-size:.83rem;font-weight:500;color:var(--text2);border-left:3px solid transparent;border-right:0;border-top:0;border-bottom:0;background:none;width:100%;font-family:'Inter',sans-serif}
+.sb-item:hover{background:var(--s2);color:var(--text)}
+.sb-item.on{background:var(--gold-pale);color:var(--gold);border-left-color:var(--gold)}
+.sb-item i{width:16px;text-align:center;flex-shrink:0;font-size:.82rem}
+.sb-badge{margin-left:auto;background:var(--gold);color:#fff;font-size:.62rem;font-weight:700;padding:.1rem .45rem;border-radius:99px}
+.sb-badge-red{margin-left:auto;background:var(--red);color:#fff;font-size:.62rem;font-weight:700;padding:.1rem .45rem;border-radius:99px}
+.sb-footer{padding:1.25rem 1.5rem;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:.65rem;margin-bottom:.85rem}
+.sb-avt{width:36px;height:36px;border-radius:50%;background:var(--gold);color:#fff;font-size:.82rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-uname{font-size:.83rem;font-weight:600;color:var(--text)}
+.sb-urole{font-size:.7rem;color:var(--text2)}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar);min-height:100vh;padding:2rem 2rem 3rem}
+.page{display:none}.page.on{display:block}
+.pg-header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border)}
+.pg-title{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:var(--text);line-height:1.15}
+.pg-sub{font-size:.8rem;color:var(--text2);margin-top:.25rem}
+
+/* ── STATS ── */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1rem;margin-bottom:2rem}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;transition:border-color var(--tr);position:relative;overflow:hidden}
+.stat:hover{border-color:var(--gold-border)}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold);transform:scaleX(0);transition:transform var(--tr);transform-origin:left}
+.stat:hover::before{transform:scaleX(1)}
+.stat-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.9rem;margin-bottom:.85rem}
+.si-gold{background:var(--gold-pale);color:var(--gold)}.si-green{background:rgba(58,170,106,.1);color:var(--green)}.si-red{background:rgba(224,85,85,.1);color:var(--red)}.si-blue{background:rgba(79,156,249,.1);color:var(--blue)}.si-purple{background:rgba(155,114,207,.1);color:var(--purple)}
+.stat-val{font-family:'Cormorant Garamond',serif;font-size:2.1rem;font-weight:700;color:var(--text);line-height:1}
+.stat-lbl{font-size:.72rem;color:var(--text2);margin-top:.25rem;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── TABLE ── */
+.tbl-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem}
+.tbl-top{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap}
+.tbl-title{font-size:.9rem;font-weight:600;color:var(--text)}
+.tsearch{background:var(--s2);border:1.5px solid var(--border);border-radius:9px;padding:.42rem .85rem .42rem 2.1rem;color:var(--text);font-family:'Inter',sans-serif;font-size:.8rem;outline:none;width:220px}
+.tsearch-wrap{position:relative;display:inline-block}
+.tsearch-wrap i{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:var(--text2);font-size:.75rem;pointer-events:none}
+.tsearch:focus{border-color:var(--gold)}
+.tsearch::placeholder{color:var(--text2)}
+table{width:100%;border-collapse:collapse}
+th{padding:.7rem 1.1rem;text-align:left;font-size:.68rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);background:var(--s2)}
+td{padding:.85rem 1.1rem;font-size:.82rem;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+.thumb{width:46px;height:36px;border-radius:7px;object-fit:cover;border:1px solid var(--border)}
+.thumb-ph{width:46px;height:36px;border-radius:7px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--text2)}
+.sp{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;border-radius:99px;font-size:.7rem;font-weight:600}
+.sp-av{background:rgba(58,170,106,.12);color:var(--green)}
+.sp-oc{background:rgba(224,85,85,.12);color:var(--red)}
+.sp-ma{background:rgba(232,140,48,.12);color:var(--orange)}
+.sp-pend{background:rgba(155,114,207,.12);color:var(--purple)}
+.sp-appr{background:rgba(58,170,106,.12);color:var(--green)}
+.sp-deny{background:rgba(224,85,85,.12);color:var(--red)}
+.act-cell{display:flex;gap:.35rem;flex-wrap:wrap}
+.tbl-empty{padding:3rem;text-align:center;color:var(--text2)}
+.tbl-empty i{font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3}
+
+/* ── LISTING FORM ── */
+.form-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.fc{grid-column:1/-1}
+.sec-head{font-size:.7rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;padding:.4rem 0 .6rem;border-bottom:1px solid var(--border);margin:1.5rem 0 1rem;display:flex;align-items:center;gap:.5rem}
+.edit-alert{background:rgba(201,146,42,.08);border:1px solid var(--gold-border);border-radius:10px;padding:.75rem 1rem;display:flex;align-items:center;gap:.65rem;font-size:.82rem;color:var(--gold);margin-bottom:1.5rem}
+
+/* ── IMAGE UPLOADER ── */
+.dropzone{border:2px dashed var(--border);border-radius:11px;padding:2rem 1.5rem;text-align:center;cursor:pointer;transition:var(--tr);background:var(--s2)}
+.dropzone:hover,.dropzone.drag{border-color:var(--gold);background:var(--gold-pale)}
+.dropzone-ico{font-size:2rem;color:var(--text2);margin-bottom:.5rem}
+.dropzone p{color:var(--text2);font-size:.82rem;margin-top:.35rem}
+.dropzone small{font-size:.72rem;color:var(--text2)}
+.img-strip{display:flex;flex-wrap:wrap;gap:.65rem;margin-top:.75rem}
+.img-cell{position:relative;width:88px;height:68px;border-radius:9px;overflow:hidden;border:2px solid var(--border)}
+.img-cell img{width:100%;height:100%;object-fit:cover;display:block}
+.img-cover{position:absolute;bottom:2px;left:2px;background:var(--gold);color:#fff;font-size:.55rem;font-weight:700;padding:.1rem .4rem;border-radius:4px;text-transform:uppercase;letter-spacing:.3px}
+.img-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--tr)}
+.img-del:hover{background:var(--red)}
+.img-add{width:88px;height:68px;border-radius:9px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:1.4rem;transition:var(--tr);gap:.2rem;background:var(--s2)}
+.img-add span{font-size:.65rem;font-weight:600}
+.img-add:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── AMENITY TAGS ── */
+.atags{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem}
+.atag{display:inline-flex;align-items:center;gap:.35rem;background:var(--gold-pale);border:1px solid var(--gold-border);color:var(--gold);font-size:.75rem;font-weight:500;padding:.22rem .65rem;border-radius:99px}
+.atag button{background:none;border:none;color:var(--gold);cursor:pointer;font-size:.72rem;line-height:1;padding:0}
+.atag button:hover{color:var(--red)}
+.arow{display:flex;gap:.5rem;align-items:stretch}
+.arow input{flex:1;padding-left:.9rem}
+
+/* ── USERS ── */
+.u-avt{width:34px;height:34px;border-radius:50%;background:var(--gold);color:#fff;font-size:.78rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── RESERVATION CARD ── */
+.res-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;transition:border-color var(--tr)}
+.res-card:hover{border-color:var(--gold-border)}
+.res-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;flex-wrap:wrap}
+.res-listing-name{font-weight:700;font-size:.92rem;color:var(--text)}
+.res-listing-loc{font-size:.75rem;color:var(--text2);display:flex;align-items:center;gap:.3rem;margin-top:.2rem}
+.res-user-row{display:flex;align-items:center;gap:.65rem}
+.res-avt{width:30px;height:30px;border-radius:50%;background:var(--s3);color:var(--gold);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--gold-border)}
+.res-user-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.res-user-email{font-size:.72rem;color:var(--text2)}
+.res-meta{display:flex;gap:1rem;flex-wrap:wrap;font-size:.75rem;color:var(--text2)}
+.res-meta span{display:flex;align-items:center;gap:.3rem}
+.res-meta i{color:var(--gold);font-size:.72rem}
+.res-actions{display:flex;gap:.5rem;flex-wrap:wrap;padding-top:.65rem;border-top:1px solid var(--border)}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:1rem}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .22s}
+.overlay.on{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border-radius:var(--radius-lg);border:1px solid var(--border);width:100%;max-width:440px;box-shadow:var(--shadow-lg);transform:translateY(20px);transition:transform .28s}
+.overlay.on .modal{transform:translateY(0)}
+.modal-head{padding:1.5rem 1.75rem 0;display:flex;justify-content:space-between;align-items:center}
+.modal-head h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700}
+.modal-close{background:var(--s2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--text2);font-size:.8rem;display:flex;align-items:center;justify-content:center;transition:var(--tr)}
+.modal-close:hover{background:var(--s3);color:var(--text)}
+.modal-body{padding:1.25rem 1.75rem 1.75rem}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;display:flex;align-items:center;gap:.6rem;background:var(--s1);border:1px solid var(--border);color:var(--text);padding:.8rem 1.2rem;border-radius:12px;font-size:.82rem;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:var(--tr);pointer-events:none;box-shadow:var(--shadow)}
+.toast.on{transform:translateY(0);opacity:1}
+.toast.ok{border-color:var(--green)}.toast.warn{border-color:var(--red)}.toast.info{border-color:var(--blue)}
+
+/* ── PENDING BANNER ── */
+.pend-banner{background:rgba(155,114,207,.1);border:1px solid rgba(155,114,207,.3);border-radius:10px;padding:.85rem 1.1rem;display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;font-size:.83rem;color:var(--purple)}
+.pend-banner i{font-size:1rem;flex-shrink:0}
+
+@media(max-width:900px){
+  .sidebar{width:64px}
+  .sb-logo-text,.sb-logo-sub,.sb-section,.sb-item span,.sb-badge,.sb-badge-red,.sb-uname,.sb-urole,.sb-footer .btn{display:none}
+  .sb-item{justify-content:center;padding:.75rem}
+  .main{margin-left:64px;padding:1.25rem}
+  .form-grid{grid-template-columns:1fr}
+  .res-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-brand-icon"><i class="fa-solid fa-house-chimney-crack"></i></div>
+      <span class="login-brand-text">Nest<span>ZM</span></span>
+    </div>
+    <div class="admin-chip"><i class="fa-solid fa-shield-halved"></i> Admin Portal</div>
+    <div class="login-title">Sign in to your panel</div>
+    <div class="login-sub">Manage all boarding house listings in one place.</div>
+    <div class="fg">
+      <label>Username</label>
+      <div class="iw"><i class="fa-regular fa-user"></i><input type="text" id="aUser" placeholder="admin"/></div>
+      <div class="ferr" id="aUserErr"></div>
+    </div>
+    <div class="fg">
+      <label>Password</label>
+      <div class="iw"><i class="fa-solid fa-lock"></i><input type="password" id="aPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <div class="ferr" id="aPassErr"></div>
+    </div>
+    <button class="btn btn-gold btn-full" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
+    <p style="font-size:.72rem;color:var(--text2);text-align:center;margin-top:1rem">Default credentials: <strong>admin</strong> / <strong>admin123</strong></p>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="shell">
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon"><i class="fa-solid fa-house-chimney"></i></div>
+      <span class="sb-logo-text">Nest<span>ZM</span></span>
+      <span class="sb-logo-sub">Admin</span>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Main</div>
+      <button class="sb-item on" id="nav-dashboard" onclick="goPage('dashboard',this)"><i class="fa-solid fa-chart-pie"></i><span>Dashboard</span></button>
+      <button class="sb-item" id="nav-listings" onclick="goPage('listings',this)"><i class="fa-solid fa-building"></i><span>My Listings</span><span class="sb-badge" id="sbCount">0</span></button>
+      <button class="sb-item" id="addBtn" onclick="prepAdd();goPage('form',this)"><i class="fa-solid fa-circle-plus"></i><span>Add Listing</span></button>
+      <button class="sb-item" id="nav-reservations" onclick="goPage('reservations',this)"><i class="fa-solid fa-calendar-check"></i><span>Reservations</span><span class="sb-badge-red" id="sbPending" style="display:none">0</span></button>
+      <div class="sb-section">System</div>
+      <button class="sb-item" id="nav-users" onclick="goPage('users',this)"><i class="fa-solid fa-users"></i><span>Users</span></button>
+    </nav>
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-avt">AD</div>
+        <div><div class="sb-uname">Administrator</div><div class="sb-urole">Super Admin</div></div>
+      </div>
+      <button class="btn btn-slate btn-sm" style="width:100%;justify-content:center" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> <span>Log Out</span></button>
+    </div>
+  </aside>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page on" id="page-dashboard">
+      <div class="pg-header">
+        <div><div class="pg-title">Dashboard</div><div class="pg-sub">Overview of all your listings</div></div>
+        <button class="btn btn-gold" onclick="prepAdd();goPage('form',document.getElementById('addBtn'))"><i class="fa-solid fa-plus"></i> New Listing</button>
+      </div>
+      <div class="stat-row" id="statRow"></div>
+      <div class="tbl-card">
+        <div class="tbl-top">
+          <span class="tbl-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--gold)"></i> Recent Listings</span>
+          <button class="btn btn-slate btn-sm" onclick="goPage('listings',document.getElementById('nav-listings'))">View All <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+        <table><thead><tr><th>Name</th><th>Location</th><th>Price (ZMW)</th><th>Status</th><th>Slots</th></tr></thead><tbody id="recentTbody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- LISTINGS -->
+    <div class="page" id="page-listings">
+      <div class="pg-header">
+        <div><div class="pg-title">My Listings</div><div class="pg-sub" id="listSub"></div></div>
+        <button class="btn btn-gold" onclick="prepAdd();goPage('form',document.getElementById('addBtn'))"><i class="fa-solid fa-plus"></i> Add Listing</button>
+      </div>
+      <div class="tbl-card">
+        <div class="tbl-top">
+          <div class="tsearch-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="tsearch" type="text" placeholder="Search listings…" oninput="renderListings(this.value)"/></div>
+          <span class="sp sp-av" id="listCount"></span>
+        </div>
+        <table>
+          <thead><tr><th>Photo</th><th>Name</th><th>Location</th><th>Distance</th><th>Price/mo</th><th>Status</th><th>Slots</th><th>Actions</th></tr></thead>
+          <tbody id="listTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FORM (ADD / EDIT) -->
+    <div class="page" id="page-form">
+      <div class="pg-header">
+        <div><div class="pg-title" id="formTitle">Add New Listing</div><div class="pg-sub">Changes appear instantly on the user site</div></div>
+        <button class="btn btn-slate" onclick="cancelForm()"><i class="fa-solid fa-arrow-left"></i> Cancel</button>
+      </div>
+      <div id="editAlert" style="display:none" class="edit-alert"><i class="fa-solid fa-pen-to-square"></i><span id="editAlertTxt"></span></div>
+      <div class="form-card">
+        <input type="hidden" id="editId"/>
+        <div class="sec-head"><i class="fa-solid fa-circle-info"></i> Basic Information</div>
+        <div class="form-grid">
+          <div class="fg fc"><label>Listing Name *</label><div class="iw"><i class="fa-solid fa-house"></i><input type="text" id="fName" placeholder="e.g. Green Valley Boarding House"/></div><div class="ferr" id="fNameErr"></div></div>
+          <div class="fg fc"><label>Location / Address *</label><div class="iw"><i class="fa-solid fa-location-dot"></i><input type="text" id="fLoc" placeholder="e.g. Lusaka, Woodlands"/></div><div class="ferr" id="fLocErr"></div></div>
+          <div class="fg fc"><label>Distance from Landmark / City Centre</label><div class="iw"><i class="fa-solid fa-route"></i><input type="text" id="fDist" placeholder="e.g. 2.4 km from UNZA, 1 km from Arcades Mall"/></div></div>
+          <div class="fg fc"><label>Description</label><textarea class="no-icon" id="fDesc" rows="3" placeholder="Describe the property, rules, surroundings, nearby services…"></textarea></div>
+        </div>
+        <div class="sec-head"><i class="fa-solid fa-tag"></i> Pricing & Details <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text2);font-size:.7rem">(all prices in Zambian Kwacha — ZMW)</span></div>
+        <div class="form-grid">
+          <div class="fg">
+            <label>Monthly Price (ZMW) *</label>
+            <div class="iw">
+              <span class="price-prefix">K</span>
+              <input type="number" id="fPrice" class="price-input" placeholder="3500" min="0"/>
+            </div>
+            <div class="ferr" id="fPriceErr"></div>
+          </div>
+          <div class="fg"><label>Available Slots</label><div class="iw"><i class="fa-solid fa-users"></i><input type="number" id="fSlots" placeholder="4" min="0"/></div></div>
+          <div class="fg"><label>Room Type</label><div class="iw"><i class="fa-solid fa-bed"></i><select id="fRoom"><option value="">Select type…</option><option value="private">Private Room</option><option value="shared">Shared Room</option><option value="studio">Studio / Self-contained</option></select></div></div>
+          <div class="fg"><label>Listing Status</label><div class="iw"><i class="fa-solid fa-toggle-on"></i><select id="fStatus"><option value="available">Available</option><option value="occupied">Occupied</option><option value="maintenance">Under Maintenance</option></select></div></div>
+          <div class="fg"><label>Gender Policy</label><div class="iw"><i class="fa-solid fa-venus-mars"></i><select id="fGender"><option value="">No restriction</option><option value="Female Only">Female Only</option><option value="Male Only">Male Only</option><option value="Mixed">Mixed</option></select></div></div>
+          <div class="fg"><label>Curfew Time</label><div class="iw"><i class="fa-solid fa-clock"></i><input type="text" id="fCurfew" placeholder="e.g. 10:00 PM"/></div></div>
+          <div class="fg fc"><label>Contact Number</label><div class="iw"><i class="fa-solid fa-phone"></i><input type="text" id="fContact" placeholder="+260 977 000 000"/></div></div>
+        </div>
+        <div class="sec-head"><i class="fa-solid fa-star"></i> Amenities</div>
+        <div class="atags" id="atags"></div>
+        <div class="arow">
+          <input class="no-icon" type="text" id="aInput" placeholder="Type amenity and press Add (e.g. WiFi, Air Con, CCTV…)" onkeydown="if(event.key==='Enter'){event.preventDefault();addAmenity()}"/>
+          <button class="btn btn-slate" onclick="addAmenity()"><i class="fa-solid fa-plus"></i> Add</button>
+        </div>
+        <p style="font-size:.72rem;color:var(--text2);margin-top:.4rem">Common: WiFi · Air Con · Water Included · Laundry · Parking · Kitchen · CCTV · Security Guard · Borehole · DSTV</p>
+        <div class="sec-head"><i class="fa-solid fa-camera"></i> Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text2);font-size:.7rem">— first photo becomes the cover image</span></div>
+        <div class="dropzone" id="dropzone"
+             onclick="document.getElementById('fFile').click()"
+             ondragover="event.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="onDrop(event)">
+          <div class="dropzone-ico"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+          <p>Click to upload or drag &amp; drop photos here</p>
+          <small>JPG, PNG, WEBP · Multiple files supported</small>
+          <input type="file" id="fFile" multiple accept="image/*" style="display:none" onchange="onFiles(this.files)"/>
+        </div>
+        <div class="img-strip" id="imgStrip"></div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:2rem;padding-top:1.25rem;border-top:1px solid var(--border)">
+          <button class="btn btn-slate" onclick="cancelForm()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+          <button class="btn btn-gold" onclick="saveListing()" id="saveBtn" style="padding:.65rem 2rem"><i class="fa-solid fa-floppy-disk"></i> <span id="saveBtnTxt">Save Listing</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESERVATIONS -->
+    <div class="page" id="page-reservations">
+      <div class="pg-header">
+        <div><div class="pg-title">Reservations</div><div class="pg-sub" id="resSub">All reservation requests from users</div></div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button class="btn btn-slate btn-sm" id="resFilterAll" onclick="setResFilter('all',this)"><i class="fa-solid fa-list"></i> All</button>
+          <button class="btn btn-sm btn-purple" id="resFilterPend" onclick="setResFilter('pending',this)"><i class="fa-solid fa-hourglass-half"></i> Pending</button>
+          <button class="btn btn-sm btn-green" id="resFilterAppr" onclick="setResFilter('approved',this)"><i class="fa-solid fa-check"></i> Approved</button>
+          <button class="btn btn-sm btn-danger" id="resFilterDeny" onclick="setResFilter('denied',this)"><i class="fa-solid fa-xmark"></i> Denied</button>
+        </div>
+      </div>
+      <div id="pendingBanner" class="pend-banner" style="display:none">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span id="pendingBannerTxt"></span>
+      </div>
+      <div class="res-grid" id="resGrid"></div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="pg-header">
+        <div><div class="pg-title">Registered Users</div><div class="pg-sub" id="userSub"></div></div>
+      </div>
+      <div class="tbl-card">
+        <div class="tbl-top">
+          <div class="tsearch-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="tsearch" type="text" placeholder="Search users…" oninput="renderUsers(this.value)"/></div>
+          <span class="sp sp-av" id="userCount"></span>
+        </div>
+        <table><thead><tr><th>User</th><th>Email</th><th>Joined</th><th>Reservations</th><th>Action</th></tr></thead><tbody id="userTbody"></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="overlay" id="delOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i class="fa-solid fa-triangle-exclamation" style="color:var(--red)"></i> Delete Listing?</h3>
+      <button class="modal-close" onclick="closeModal('delOverlay')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text2);font-size:.85rem;margin-bottom:.5rem">You are about to permanently delete:</p>
+      <p style="font-weight:600;color:var(--text);font-size:.9rem;margin-bottom:1.25rem" id="delName"></p>
+      <p style="color:var(--text2);font-size:.8rem;margin-bottom:1.5rem">This action cannot be undone. The listing will be removed from the user site immediately.</p>
+      <div style="display:flex;gap:.75rem;justify-content:flex-end">
+        <button class="btn btn-slate" onclick="closeModal('delOverlay')">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDelete()"><i class="fa-solid fa-trash"></i> Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DENY REASON MODAL -->
+<div class="overlay" id="denyOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3><i class="fa-solid fa-xmark" style="color:var(--red)"></i> Deny Reservation</h3>
+      <button class="modal-close" onclick="closeModal('denyOverlay')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text2);font-size:.83rem;margin-bottom:1rem">Optionally provide a reason for the user:</p>
+      <div class="fg"><textarea class="no-icon" id="denyReason" rows="3" placeholder="e.g. Payment not confirmed yet, slot filled by another applicant…"></textarea></div>
+      <div style="display:flex;gap:.75rem;justify-content:flex-end">
+        <button class="btn btn-slate" onclick="closeModal('denyOverlay')">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDeny()"><i class="fa-solid fa-ban"></i> Deny Request</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── ADMIN AUTH ──────────────────────────────────────────────
+const CRED={u:'admin',p:'admin123'};
+let pendingDel=null, pendingDenyId=null, resFilter='all';
+
+function doLogin(){
+  const u=document.getElementById('aUser').value.trim();
+  const p=document.getElementById('aPass').value;
+  ['aUserErr','aPassErr'].forEach(id=>document.getElementById(id).innerHTML='');
+  if(!u){document.getElementById('aUserErr').innerHTML='<i class="fa-solid fa-circle-exclamation"></i> Required';return}
+  if(!p){document.getElementById('aPassErr').innerHTML='<i class="fa-solid fa-circle-exclamation"></i> Required';return}
+  if(u!==CRED.u||p!==CRED.p){document.getElementById('aPassErr').innerHTML='<i class="fa-solid fa-circle-exclamation"></i> Invalid credentials';return}
+  sessionStorage.setItem('zm_admin','1');
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('shell').style.display='block';
+  renderDashboard();updatePendingBadge();
+}
+
+function doLogout(){
+  sessionStorage.removeItem('zm_admin');
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('shell').style.display='none';
+}
+
+// Restore session on page load
+window.addEventListener('DOMContentLoaded',()=>{
+  if(sessionStorage.getItem('zm_admin')==='1'){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('shell').style.display='block';
+    renderDashboard();updatePendingBadge();
+  }
+});
+
+// ── DATA ───────────────────────────────────────────────────
+const getListings=()=>JSON.parse(localStorage.getItem('zm_listings')||'[]');
+const saveListings=d=>localStorage.setItem('zm_listings',JSON.stringify(d));
+const getUsers=()=>JSON.parse(localStorage.getItem('zm_users')||'[]');
+const saveUsers=d=>localStorage.setItem('zm_users',JSON.stringify(d));
+const getReservations=()=>JSON.parse(localStorage.getItem('zm_reservations')||'[]');
+const saveReservations=d=>localStorage.setItem('zm_reservations',JSON.stringify(d));
+const fmtK=p=>{const n=Number(p);return isNaN(n)?'K —':'K '+n.toLocaleString()};
+
+// ── PAGES ──────────────────────────────────────────────────
+function goPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('on'));
+  document.getElementById('page-'+name).classList.add('on');
+  if(el)el.classList.add('on');
+  if(name==='dashboard')renderDashboard();
+  if(name==='listings')renderListings();
+  if(name==='users')renderUsers();
+  if(name==='reservations')renderReservations();
+}
+function cancelForm(){resetForm();goPage('listings',document.getElementById('nav-listings'))}
+function closeModal(id){document.getElementById(id).classList.remove('on')}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on')}));
+
+// ── DASHBOARD ──────────────────────────────────────────────
+function renderDashboard(){
+  const L=getListings(),U=getUsers(),R=getReservations();
+  const avail=L.filter(l=>l.status==='available').length;
+  const occ=L.filter(l=>l.status==='occupied').length;
+  const pend=R.filter(r=>r.status==='pending').length;
+  document.getElementById('statRow').innerHTML=`
+    <div class="stat"><div class="stat-ico si-gold"><i class="fa-solid fa-building"></i></div><div class="stat-val">${L.length}</div><div class="stat-lbl">Total Listings</div></div>
+    <div class="stat"><div class="stat-ico si-green"><i class="fa-solid fa-circle-check"></i></div><div class="stat-val" style="color:var(--green)">${avail}</div><div class="stat-lbl">Available</div></div>
+    <div class="stat"><div class="stat-ico si-red"><i class="fa-solid fa-door-closed"></i></div><div class="stat-val" style="color:var(--red)">${occ}</div><div class="stat-lbl">Occupied</div></div>
+    <div class="stat"><div class="stat-ico si-blue"><i class="fa-solid fa-users"></i></div><div class="stat-val" style="color:var(--blue)">${U.length}</div><div class="stat-lbl">Registered Users</div></div>
+    <div class="stat"><div class="stat-ico si-purple"><i class="fa-solid fa-calendar-check"></i></div><div class="stat-val" style="color:var(--purple)">${R.length}</div><div class="stat-lbl">Reservations</div></div>
+    ${pend?`<div class="stat" style="border-color:rgba(155,114,207,.4)"><div class="stat-ico si-purple"><i class="fa-solid fa-hourglass-half"></i></div><div class="stat-val" style="color:var(--purple)">${pend}</div><div class="stat-lbl">Pending Approval</div></div>`:''}`;
+  document.getElementById('sbCount').textContent=L.length;
+  const recent=L.slice().sort((a,b)=>b.created-a.created).slice(0,5);
+  document.getElementById('recentTbody').innerHTML=recent.length?
+    recent.map(l=>`<tr>
+      <td style="font-weight:600;color:var(--text)">${l.name}</td>
+      <td style="color:var(--text2)">${l.location}</td>
+      <td>${fmtK(l.price)}</td>
+      <td><span class="sp ${l.status==='available'?'sp-av':l.status==='occupied'?'sp-oc':'sp-ma'}">${l.status}</span></td>
+      <td>${l.slots||0}</td></tr>`).join('')
+    :`<tr><td colspan="5" class="tbl-empty"><i class="fa-regular fa-building"></i>No listings yet</td></tr>`;
+}
+
+function updatePendingBadge(){
+  const pend=getReservations().filter(r=>r.status==='pending').length;
+  const b=document.getElementById('sbPending');
+  if(pend>0){b.textContent=pend;b.style.display='inline-flex'}
+  else{b.style.display='none'}
+}
+
+// ── LISTINGS TABLE ─────────────────────────────────────────
+function renderListings(q=''){
+  let L=getListings();
+  if(q)L=L.filter(l=>l.name.toLowerCase().includes(q.toLowerCase())||l.location.toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('listCount').textContent=`${L.length} listing${L.length!==1?'s':''}`;
+  document.getElementById('listSub').textContent=`${getListings().length} total listings · click Edit to modify any listing`;
+  document.getElementById('sbCount').textContent=getListings().length;
+  const tbody=document.getElementById('listTbody');
+  if(!L.length){tbody.innerHTML=`<tr><td colspan="8" class="tbl-empty"><i class="fa-regular fa-building"></i> No listings found</td></tr>`;return}
+  tbody.innerHTML=L.map(l=>`<tr>
+    <td>${l.images&&l.images[0]
+      ?`<img class="thumb" src="${l.images[0]}" onerror="this.outerHTML='<div class=thumb-ph><i class=fa-solid fa-house></i></div>'">`
+      :`<div class="thumb-ph"><i class="fa-solid fa-house"></i></div>`}</td>
+    <td style="font-weight:600;max-width:165px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name}</td>
+    <td style="color:var(--text2);font-size:.78rem">${l.location}</td>
+    <td style="color:var(--text2);font-size:.75rem">${l.distance||'—'}</td>
+    <td style="font-weight:600;color:var(--gold)">${fmtK(l.price)}</td>
+    <td><span class="sp ${l.status==='available'?'sp-av':l.status==='occupied'?'sp-oc':'sp-ma'}">${l.status}</span></td>
+    <td style="color:var(--text2)">${l.slots||0}</td>
+    <td><div class="act-cell">
+      <button class="btn btn-edit btn-sm" onclick="editListing('${l.id}')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="askDelete('${l.id}')"><i class="fa-solid fa-trash"></i></button>
+    </div></td>
+  </tr>`).join('');
+}
+
+// ── RESERVATIONS ────────────────────────────────────────────
+let resFilterState='all';
+function setResFilter(f,el){
+  resFilterState=f;
+  document.querySelectorAll('[id^="resFilter"]').forEach(b=>b.classList.remove('btn-gold'));
+  if(el)el.style.opacity='1';
+  renderReservations();
+}
+
+function renderReservations(){
+  let R=getReservations();
+  const L=getListings();
+  const U=getUsers();
+
+  // Pending banner
+  const pend=R.filter(r=>r.status==='pending').length;
+  const banner=document.getElementById('pendingBanner');
+  if(pend>0){
+    banner.style.display='flex';
+    document.getElementById('pendingBannerTxt').textContent=`${pend} reservation${pend>1?'s':''} awaiting your approval — review and approve after payment confirmation.`;
+  } else {
+    banner.style.display='none';
+  }
+  updatePendingBadge();
+
+  if(resFilterState!=='all') R=R.filter(r=>r.status===resFilterState);
+  document.getElementById('resSub').textContent=`${R.length} reservation${R.length!==1?'s':''} shown`;
+
+  const grid=document.getElementById('resGrid');
+  if(!R.length){
+    grid.innerHTML=`<div style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--text2)"><i class="fa-regular fa-calendar-xmark" style="font-size:2rem;display:block;margin-bottom:.75rem;opacity:.3"></i>No reservations found</div>`;
+    return;
+  }
+
+  // Sort newest first
+  R=R.slice().sort((a,b)=>b.createdAt-a.createdAt);
+
+  grid.innerHTML=R.map(r=>{
+    const listing=L.find(l=>l.id===r.listingId)||{name:'(Deleted listing)',location:'—'};
+    const user=U.find(u=>u.email===r.userEmail)||{name:r.userName||'Unknown',email:r.userEmail};
+    const ini=(user.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const date=new Date(r.createdAt).toLocaleDateString('en-ZM',{day:'numeric',month:'short',year:'numeric'});
+    const statusBadge=r.status==='pending'
+      ?`<span class="sp sp-pend"><i class="fa-solid fa-hourglass-half" style="font-size:.6rem"></i> Pending</span>`
+      :r.status==='approved'
+      ?`<span class="sp sp-appr"><i class="fa-solid fa-check" style="font-size:.6rem"></i> Approved</span>`
+      :`<span class="sp sp-deny"><i class="fa-solid fa-xmark" style="font-size:.6rem"></i> Denied${r.denyReason?` — ${r.denyReason}`:''}</span>`;
+
+    const actionBtns=r.status==='pending'?`
+      <button class="btn btn-green btn-sm" onclick="approveReservation('${r.id}')"><i class="fa-solid fa-circle-check"></i> Approve</button>
+      <button class="btn btn-danger btn-sm" onclick="openDeny('${r.id}')"><i class="fa-solid fa-ban"></i> Deny</button>`
+      :r.status==='approved'?`
+      <button class="btn btn-danger btn-sm" onclick="revokeReservation('${r.id}')"><i class="fa-solid fa-rotate-left"></i> Revoke</button>`
+      :`<button class="btn btn-green btn-sm" onclick="approveReservation('${r.id}')"><i class="fa-solid fa-rotate-right"></i> Re-approve</button>`;
+
+    return`<div class="res-card">
+      <div class="res-card-top">
+        <div>
+          <div class="res-listing-name"><i class="fa-solid fa-house" style="color:var(--gold);margin-right:.35rem;font-size:.8rem"></i>${listing.name}</div>
+          <div class="res-listing-loc"><i class="fa-solid fa-location-dot"></i>${listing.location}</div>
+        </div>
+        ${statusBadge}
+      </div>
+      <div class="res-user-row">
+        <div class="res-avt">${ini}</div>
+        <div>
+          <div class="res-user-name">${user.name}</div>
+          <div class="res-user-email">${user.email}</div>
+        </div>
+      </div>
+      <div class="res-meta">
+        <span><i class="fa-solid fa-users"></i> <strong style="color:var(--text)">${r.slotsRequested}</strong> slot${r.slotsRequested>1?'s':''} requested</span>
+        <span><i class="fa-solid fa-calendar"></i> ${date}</span>
+        ${r.note?`<span style="width:100%"><i class="fa-solid fa-comment"></i> "${r.note}"</span>`:''}
+      </div>
+      <div class="res-actions">${actionBtns}</div>
+    </div>`;
+  }).join('');
+}
+
+function approveReservation(id){
+  const R=getReservations();
+  const r=R.find(x=>x.id===id);
+  if(!r)return;
+  if(r.status==='approved'){toast('<i class="fa-solid fa-info-circle"></i> Already approved','info');return}
+
+  // Deduct slots from listing
+  const L=getListings();
+  const idx=L.findIndex(l=>l.id===r.listingId);
+  if(idx>-1){
+    const curSlots=Number(L[idx].slots)||0;
+    const needed=Number(r.slotsRequested)||1;
+    if(curSlots<needed){toast('<i class="fa-solid fa-triangle-exclamation"></i> Not enough slots available!','warn');return}
+    L[idx].slots=curSlots-needed;
+    if(L[idx].slots===0)L[idx].status='occupied';
+    saveListings(L);
+  }
+
+  r.status='approved';
+  r.approvedAt=Date.now();
+  r.denyReason='';
+  saveReservations(R);
+
+  // Flag on user record that this reservation is approved
+  const users=getUsers();
+  const ui=users.findIndex(u=>u.email===r.userEmail);
+  if(ui>-1){
+    if(!users[ui].approvedReservations)users[ui].approvedReservations=[];
+    if(!users[ui].approvedReservations.includes(id))users[ui].approvedReservations.push(id);
+    saveUsers(users);
+  }
+
+  renderReservations();renderDashboard();
+  toast('<i class="fa-solid fa-check"></i> Reservation approved — user notified','ok');
+}
+
+function openDeny(id){
+  pendingDenyId=id;
+  document.getElementById('denyReason').value='';
+  document.getElementById('denyOverlay').classList.add('on');
+}
+
+function confirmDeny(){
+  if(!pendingDenyId)return;
+  const reason=document.getElementById('denyReason').value.trim();
+  const R=getReservations();
+  const r=R.find(x=>x.id===pendingDenyId);
+  if(!r){closeModal('denyOverlay');return}
+
+  // If was previously approved, restore slots
+  if(r.status==='approved'){
+    const L=getListings();
+    const idx=L.findIndex(l=>l.id===r.listingId);
+    if(idx>-1){
+      L[idx].slots=(Number(L[idx].slots)||0)+Number(r.slotsRequested||1);
+      if(L[idx].status==='occupied')L[idx].status='available';
+      saveListings(L);
+    }
+  }
+
+  r.status='denied';
+  r.denyReason=reason||'No reason provided';
+  r.deniedAt=Date.now();
+  saveReservations(R);
+
+  // Remove from user approved list
+  const users=getUsers();
+  const ui=users.findIndex(u=>u.email===r.userEmail);
+  if(ui>-1){
+    users[ui].approvedReservations=(users[ui].approvedReservations||[]).filter(x=>x!==pendingDenyId);
+    saveUsers(users);
+  }
+
+  pendingDenyId=null;closeModal('denyOverlay');
+  renderReservations();renderDashboard();
+  toast('<i class="fa-solid fa-ban"></i> Reservation denied','warn');
+}
+
+function revokeReservation(id){
+  if(!confirm('Revoke this approval? Slots will be restored.'))return;
+  const R=getReservations();
+  const r=R.find(x=>x.id===id);
+  if(!r||r.status!=='approved')return;
+
+  // Restore slots
+  const L=getListings();
+  const idx=L.findIndex(l=>l.id===r.listingId);
+  if(idx>-1){
+    L[idx].slots=(Number(L[idx].slots)||0)+Number(r.slotsRequested||1);
+    if(L[idx].status==='occupied')L[idx].status='available';
+    saveListings(L);
+  }
+
+  r.status='denied';
+  r.denyReason='Revoked by admin';
+  r.deniedAt=Date.now();
+  saveReservations(R);
+
+  const users=getUsers();
+  const ui=users.findIndex(u=>u.email===r.userEmail);
+  if(ui>-1){
+    users[ui].approvedReservations=(users[ui].approvedReservations||[]).filter(x=>x!==id);
+    saveUsers(users);
+  }
+
+  renderReservations();renderDashboard();
+  toast('<i class="fa-solid fa-rotate-left"></i> Reservation revoked — slots restored','warn');
+}
+
+// ── USERS TABLE ────────────────────────────────────────────
+function renderUsers(q=''){
+  let U=getUsers();
+  const R=getReservations();
+  if(q)U=U.filter(u=>u.name.toLowerCase().includes(q.toLowerCase())||u.email.toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('userCount').textContent=`${U.length} user${U.length!==1?'s':''}`;
+  document.getElementById('userSub').textContent=`${getUsers().length} registered accounts`;
+  const tbody=document.getElementById('userTbody');
+  if(!U.length){tbody.innerHTML=`<tr><td colspan="5" class="tbl-empty"><i class="fa-regular fa-user"></i> No users yet</td></tr>`;return}
+  tbody.innerHTML=U.map(u=>{
+    const ini=u.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const d=new Date(u.created).toLocaleDateString('en-ZM',{day:'numeric',month:'short',year:'numeric'});
+    const userRes=R.filter(r=>r.userEmail===u.email);
+    const approvedCount=userRes.filter(r=>r.status==='approved').length;
+    const pendingCount=userRes.filter(r=>r.status==='pending').length;
+    return`<tr>
+      <td><div style="display:flex;align-items:center;gap:.65rem"><div class="u-avt">${ini}</div><span style="font-weight:600">${u.name}</span></div></td>
+      <td style="color:var(--text2)">${u.email}</td>
+      <td style="color:var(--text2);font-size:.78rem">${d}</td>
+      <td>
+        ${approvedCount?`<span class="sp sp-av" style="margin-right:.25rem">${approvedCount} approved</span>`:''}
+        ${pendingCount?`<span class="sp sp-pend">${pendingCount} pending</span>`:''}
+        ${!approvedCount&&!pendingCount?`<span style="color:var(--text2);font-size:.75rem">None</span>`:''}
+      </td>
+      <td><button class="btn btn-danger btn-sm" onclick="delUser('${u.email}')"><i class="fa-solid fa-user-minus"></i> Remove</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function delUser(email){
+  if(!confirm('Remove this user? Their reservations will also be removed.'))return;
+  localStorage.setItem('zm_users',JSON.stringify(getUsers().filter(u=>u.email!==email)));
+  // Remove their reservations too
+  const cleaned=getReservations().filter(r=>r.userEmail!==email);
+  saveReservations(cleaned);
+  renderUsers();renderDashboard();
+  toast('<i class="fa-solid fa-check"></i> User removed','ok');
+}
+
+// ── AMENITIES ──────────────────────────────────────────────
+let amenities=[];
+function addAmenity(){
+  const inp=document.getElementById('aInput');
+  const v=inp.value.trim();
+  if(!v||amenities.includes(v))return;
+  amenities.push(v);inp.value='';renderAmenities();
+}
+function rmAmenity(a){amenities=amenities.filter(x=>x!==a);renderAmenities()}
+function renderAmenities(){
+  document.getElementById('atags').innerHTML=amenities.map(a=>
+    `<span class="atag"><i class="fa-solid fa-check" style="font-size:.65rem"></i> ${a}<button onclick="rmAmenity('${a.replace(/'/g,"\\'")}')"><i class="fa-solid fa-xmark"></i></button></span>`).join('');
+}
+
+// ── IMAGES ─────────────────────────────────────────────────
+let imgs=[];
+function onFiles(files){
+  Array.from(files).forEach(f=>{
+    if(!f.type.startsWith('image/'))return;
+    const r=new FileReader();
+    r.onload=e=>{imgs.push(e.target.result);renderImgs()};
+    r.readAsDataURL(f);
+  });
+  document.getElementById('fFile').value='';
+}
+function onDrop(e){e.preventDefault();document.getElementById('dropzone').classList.remove('drag');onFiles(e.dataTransfer.files)}
+function rmImg(i){imgs.splice(i,1);renderImgs()}
+function renderImgs(){
+  document.getElementById('imgStrip').innerHTML=imgs.map((s,i)=>`
+    <div class="img-cell">
+      <img src="${s}" alt="Photo ${i+1}"/>
+      ${i===0?'<span class="img-cover">Cover</span>':''}
+      <button class="img-del" onclick="rmImg(${i})"><i class="fa-solid fa-xmark"></i></button>
+    </div>`).join('')+`<div class="img-add" onclick="document.getElementById('fFile').click()"><i class="fa-solid fa-plus"></i><span>Add</span></div>`;
+}
+
+// ── FORM ───────────────────────────────────────────────────
+function prepAdd(){
+  resetForm();
+  document.getElementById('formTitle').textContent='Add New Listing';
+  document.getElementById('saveBtnTxt').textContent='Save Listing';
+  document.getElementById('editAlert').style.display='none';
+}
+function resetForm(){
+  ['fName','fLoc','fDist','fDesc','fPrice','fSlots','fCurfew','fContact','editId'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fRoom').value='';
+  document.getElementById('fStatus').value='available';
+  document.getElementById('fGender').value='';
+  amenities=[];imgs=[];renderAmenities();renderImgs();
+  ['fNameErr','fLocErr','fPriceErr'].forEach(id=>document.getElementById(id).innerHTML='');
+}
+function saveListing(){
+  const name=document.getElementById('fName').value.trim();
+  const loc=document.getElementById('fLoc').value.trim();
+  const price=document.getElementById('fPrice').value.trim();
+  let ok=true;
+  ['fNameErr','fLocErr','fPriceErr'].forEach(id=>document.getElementById(id).innerHTML='');
+  if(!name){document.getElementById('fNameErr').innerHTML='<i class="fa-solid fa-circle-exclamation"></i> Name is required';ok=false}
+  if(!loc){document.getElementById('fLocErr').innerHTML='<i class="fa-solid fa-circle-exclamation"></i> Location is required';ok=false}
+  if(!price||isNaN(price)||Number(price)<1){document.getElementById('fPriceErr').innerHTML='<i class="fa-solid fa-circle-exclamation"></i> Valid price in ZMW required';ok=false}
+  if(!ok)return;
+  const editId=document.getElementById('editId').value;
+  const L=getListings();const orig=editId?L.find(l=>l.id===editId):null;
+  const listing={
+    id:editId||'l'+Date.now(),name,
+    location:loc,
+    distance:document.getElementById('fDist').value.trim(),
+    price,
+    description:document.getElementById('fDesc').value.trim(),
+    slots:document.getElementById('fSlots').value||0,
+    roomType:document.getElementById('fRoom').value,
+    status:document.getElementById('fStatus').value,
+    gender:document.getElementById('fGender').value,
+    curfew:document.getElementById('fCurfew').value.trim(),
+    contact:document.getElementById('fContact').value.trim(),
+    amenities:[...amenities],
+    images:[...imgs],
+    created:orig?orig.created:Date.now(),
+    updated:Date.now()
+  };
+  if(editId){
+    const idx=L.findIndex(l=>l.id===editId);
+    if(idx>-1)L[idx]=listing;else L.unshift(listing);
+  }else{L.unshift(listing)}
+  saveListings(L);
+  toast(editId?'<i class="fa-solid fa-check"></i> Listing updated!':'<i class="fa-solid fa-check"></i> New listing published!','ok');
+  resetForm();
+  goPage('listings',document.getElementById('nav-listings'));
+}
+function editListing(id){
+  const l=getListings().find(x=>x.id===id);if(!l)return;
+  resetForm();
+  document.getElementById('editId').value=l.id;
+  document.getElementById('fName').value=l.name;
+  document.getElementById('fLoc').value=l.location;
+  document.getElementById('fDist').value=l.distance||'';
+  document.getElementById('fDesc').value=l.description||'';
+  document.getElementById('fPrice').value=l.price;
+  document.getElementById('fSlots').value=l.slots||'';
+  document.getElementById('fRoom').value=l.roomType||'';
+  document.getElementById('fStatus').value=l.status||'available';
+  document.getElementById('fGender').value=l.gender||'';
+  document.getElementById('fCurfew').value=l.curfew||'';
+  document.getElementById('fContact').value=l.contact||'';
+  amenities=[...(l.amenities||[])];
+  imgs=[...(l.images||[])];
+  renderAmenities();renderImgs();
+  document.getElementById('formTitle').textContent='Edit Listing';
+  document.getElementById('saveBtnTxt').textContent='Save Changes';
+  const alert=document.getElementById('editAlert');
+  alert.style.display='flex';
+  document.getElementById('editAlertTxt').textContent=`Editing "${l.name}" — all changes auto-sync to the user site`;
+  goPage('form',document.getElementById('addBtn'));
+}
+function askDelete(id){
+  pendingDel=id;
+  const l=getListings().find(x=>x.id===id);
+  document.getElementById('delName').textContent=l?l.name:'this listing';
+  document.getElementById('delOverlay').classList.add('on');
+}
+function confirmDelete(){
+  if(!pendingDel)return;
+  saveListings(getListings().filter(l=>l.id!==pendingDel));
+  // Remove associated reservations
+  saveReservations(getReservations().filter(r=>r.listingId!==pendingDel));
+  pendingDel=null;closeModal('delOverlay');
+  renderListings();renderDashboard();
+  toast('<i class="fa-solid fa-trash"></i> Listing deleted','warn');
+}
+
+// ── TOAST ──────────────────────────────────────────────────
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.className='toast'+(type?' '+type:'');
+  t.innerHTML=msg;t.classList.add('on');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),3200);
+}
+
+// ── LIVE SYNC ──────────────────────────────────────────────
+window.addEventListener('storage',e=>{
+  if(e.key==='zm_reservations'){updatePendingBadge();if(document.getElementById('page-reservations').classList.contains('on'))renderReservations();}
+  if(e.key==='zm_listings'){if(document.getElementById('page-listings').classList.contains('on'))renderListings();}
+});
+</script>
+</body>
+</html>
