@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="theme-color" content="#2c3645"/>
+<meta name="description" content="Find verified boarding houses across Zambia — Lusaka, Ndola, Kitwe and more."/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>NestZM — Boarding Houses in Zambia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+:root{
+  --bg:#f7f5f0;--white:#fff;--ink:#0e0c08;
+  --gold:#b8832a;--gold2:#d4a04e;--gold-pale:#fdf6e9;--gold-border:#e8d5a8;
+  --slate:#2c3645;--slate2:#3d4f66;
+  --muted:#7a7265;--border:#e4ddd3;
+  --green:#2e7d52;--green-pale:#eaf4ee;
+  --red:#c0392b;--red-pale:#fdecea;
+  --radius:12px;--radius-lg:20px;
+  --shadow:0 2px 16px rgba(14,12,8,.07);--shadow-lg:0 8px 40px rgba(14,12,8,.13);
+  --tr:.22s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--white:#161b27;--ink:#e2ddd5;
+  --gold:#d4a04e;--gold2:#e8bb6a;--gold-pale:rgba(212,160,78,.12);--gold-border:rgba(212,160,78,.3);
+  --slate:#5a7296;--slate2:#6a85ab;
+  --muted:#7a7870;--border:#232c3e;
+  --green:#3aaa6a;--green-pale:rgba(58,170,106,.12);
+  --red:#e05555;--red-pale:rgba(224,85,85,.12);
+  --shadow:0 2px 16px rgba(0,0,0,.35);--shadow-lg:0 8px 40px rgba(0,0,0,.55);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;transition:background .3s}
+[data-theme="dark"] .nav{background:rgba(15,17,23,.96)}
+.nav-logo{display:flex;align-items:center;gap:.6rem;text-decoration:none}
+.nav-logo-icon{width:36px;height:36px;background:var(--slate);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gold2);font-size:1rem}
+.nav-logo-text{font-family:'Cormorant Garamond',serif;font-size:1.55rem;font-weight:700;color:var(--ink)}
+.nav-logo-text span{color:var(--gold)}
+.nav-right{display:flex;align-items:center;gap:.75rem}
+.pbtn{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1.1rem;border-radius:99px;font-size:.82rem;font-weight:500;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:var(--tr);white-space:nowrap;background:transparent}
+.p-ghost{border:1.5px solid var(--border);color:var(--slate)}.p-ghost:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+.p-gold{background:var(--gold);color:#fff;border:1.5px solid transparent}.p-gold:hover{background:var(--gold2)}
+.p-icon{width:36px;height:36px;padding:0;border-radius:50%;border:1.5px solid var(--border);color:var(--muted);justify-content:center;flex-shrink:0}
+.p-icon:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+.user-chip{display:flex;align-items:center;gap:.5rem;padding:.3rem .85rem .3rem .35rem;background:var(--gold-pale);border:1.5px solid var(--gold-border);border-radius:99px;cursor:pointer;transition:var(--tr)}
+.user-chip:hover{border-color:var(--gold)}
+.u-avt{width:28px;height:28px;border-radius:50%;background:var(--slate);color:#fff;font-size:.72rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+.u-name{font-size:.8rem;font-weight:500;color:var(--slate)}
+
+/* HERO */
+.hero{background:linear-gradient(160deg,var(--slate) 0%,#1a2535 55%,#0e1520 100%);padding:5rem 2.5rem 4.5rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 30%,rgba(184,131,42,.14),transparent 65%)}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to top,var(--bg),transparent)}
+.hero-inner{max-width:680px;margin:0 auto;text-align:center;position:relative;z-index:1}
+.hero-tag{display:inline-flex;align-items:center;gap:.45rem;background:rgba(184,131,42,.18);border:1px solid rgba(184,131,42,.35);color:var(--gold2);font-size:.72rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:.35rem 1rem;border-radius:99px;margin-bottom:1.75rem}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.4rem,5.5vw,4rem);font-weight:700;color:#fff;line-height:1.12;margin-bottom:1rem}
+.hero h1 em{font-style:italic;font-weight:500;color:var(--gold2)}
+.hero-sub{color:rgba(255,255,255,.52);font-size:.95rem;font-weight:300;margin-bottom:2.25rem;line-height:1.65}
+.search-wrap{display:flex;gap:.5rem;background:#fff;border-radius:14px;padding:.5rem;box-shadow:0 4px 32px rgba(0,0,0,.18)}
+.search-wrap input{flex:1;border:none;outline:none;font-family:'Inter',sans-serif;font-size:.9rem;padding:.45rem .85rem;background:transparent;color:#0e0c08}
+.search-wrap input::placeholder{color:#7a7265}
+.search-wrap button{background:var(--gold);color:#fff;border:none;border-radius:10px;padding:.55rem 1.5rem;font-family:'Inter',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:.4rem}
+.search-wrap button:hover{background:var(--gold2)}
+.hero-stats{display:flex;justify-content:center;gap:2.5rem;margin-top:2.5rem}
+.hs-num{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:#fff}
+.hs-lbl{font-size:.72rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.8px}
+
+/* FILTER BAR */
+.fbar{background:var(--white);border-bottom:1px solid var(--border);padding:1rem 2.5rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;transition:background .3s}
+.flbl{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-right:.25rem;flex-shrink:0}
+.fpill{padding:.38rem .95rem;border-radius:99px;border:1.5px solid var(--border);background:var(--bg);font-size:.8rem;font-weight:500;cursor:pointer;transition:var(--tr);color:var(--slate);font-family:'Inter',sans-serif}
+.fpill:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+.fpill.on{background:var(--slate);color:#fff;border-color:var(--slate)}
+.fpill.fav-on{background:var(--red);border-color:var(--red);color:#fff}
+.fsort{padding:.38rem .9rem;border-radius:99px;border:1.5px solid var(--border);background:var(--bg);font-size:.8rem;color:var(--slate);outline:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500}
+.view-toggle{display:flex;border:1.5px solid var(--border);border-radius:9px;overflow:hidden;margin-left:auto}
+.vtbtn{padding:.32rem .75rem;background:var(--bg);border:none;cursor:pointer;color:var(--muted);font-size:.82rem;transition:var(--tr);font-family:'Inter',sans-serif;border-right:1px solid var(--border)}
+.vtbtn:last-child{border-right:none}
+.vtbtn:hover,.vtbtn.on{background:var(--slate);color:#fff}
+.fbar-adv{width:100%;display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;padding-top:.65rem;border-top:1px solid var(--border);margin-top:.35rem}
+.price-range{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--muted)}
+.price-inp{width:90px;padding:.3rem .55rem;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;font-size:.78rem;outline:none;transition:border-color .2s}
+.price-inp:focus{border-color:var(--gold)}
+.adv-sel{padding:.32rem .8rem;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--muted);font-size:.78rem;outline:none;font-family:'Inter',sans-serif;cursor:pointer;transition:border-color .2s}
+.adv-sel:focus{border-color:var(--gold)}
+
+/* MAIN */
+.main{max-width:1240px;margin:0 auto;padding:2.5rem 2rem}
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.75rem}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:1.65rem;font-weight:700}
+.count-chip{background:var(--gold-pale);color:var(--gold);font-size:.75rem;font-weight:600;padding:.25rem .8rem;border-radius:99px;border:1px solid var(--gold-border)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1.5rem}
+.list-view{display:flex;flex-direction:column;gap:1rem}
+.list-view .card{flex-direction:row;max-height:150px}
+.list-view .card-gal{width:190px;min-width:190px;height:150px;border-radius:var(--radius-lg) 0 0 var(--radius-lg)}
+.list-view .card-body{flex:1;justify-content:center;padding:1rem}
+.list-view .card-footer{border-top:none;border-left:1px solid var(--border);flex-direction:column;align-items:flex-end;justify-content:center;min-width:130px;padding:.75rem 1rem;gap:.5rem}
+#mapView{height:520px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);display:none}
+
+/* RECENTLY VIEWED */
+#recentSec{margin-bottom:2.5rem;display:none}
+.recent-hdr{font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.9rem;display:flex;align-items:center;gap:.4rem}
+.recent-strip{display:flex;gap:.75rem;overflow-x:auto;padding-bottom:.35rem;scrollbar-width:none}
+.recent-strip::-webkit-scrollbar{display:none}
+.r-card{flex-shrink:0;width:158px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:var(--tr)}
+.r-card:hover{border-color:var(--gold-border);box-shadow:var(--shadow)}
+.r-card img,.r-ph{width:100%;height:88px;object-fit:cover;display:block}
+.r-ph{background:linear-gradient(135deg,#1a2535,#0e1520);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.12);font-size:1.75rem}
+.r-info{padding:.5rem .65rem .6rem}
+.r-name{font-size:.74rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r-price{font-size:.7rem;color:var(--gold);font-weight:600;margin-top:.1rem}
+
+/* CARD */
+.card{background:var(--white);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow);transition:var(--tr);cursor:pointer;display:flex;flex-direction:column;position:relative}
+.card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg);border-color:var(--gold-border)}
+.card-gal{position:relative;height:210px;overflow:hidden;background:#1a2535;flex-shrink:0}
+.c-track{display:flex;height:100%;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.c-slide{min-width:100%;height:100%;flex-shrink:0}
+.c-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.c-noimg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a2535,#0e1520);color:rgba(255,255,255,.12);font-size:3.5rem}
+.cbadge{position:absolute;top:.75rem;left:.75rem;font-size:.68rem;font-weight:600;padding:.28rem .65rem;border-radius:99px;letter-spacing:.4px;text-transform:uppercase;z-index:3}
+.cb-av{background:var(--green);color:#fff}.cb-oc{background:var(--red);color:#fff}.cb-ma{background:#e67e22;color:#fff}
+.c-verified{position:absolute;top:.75rem;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;font-size:.62rem;font-weight:700;padding:.22rem .65rem;border-radius:99px;display:flex;align-items:center;gap:.3rem;z-index:3;white-space:nowrap;box-shadow:0 2px 8px rgba(184,131,42,.4)}
+.c-fav{position:absolute;top:.75rem;right:.75rem;z-index:5;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.82rem;transition:var(--tr)}
+.c-fav:hover{background:rgba(192,57,43,.85)}
+.c-fav.on{background:var(--red)}
+.c-dots{position:absolute;bottom:.6rem;left:50%;transform:translateX(-50%);display:flex;gap:.3rem;z-index:3}
+.cdot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.45);border:none;cursor:pointer;padding:0;transition:var(--tr)}
+.cdot.on{background:#fff;width:14px;border-radius:3px}
+.c-count{position:absolute;bottom:.6rem;right:.65rem;background:rgba(0,0,0,.5);color:#fff;font-size:.65rem;font-weight:500;padding:.18rem .5rem;border-radius:99px;backdrop-filter:blur(4px);display:flex;align-items:center;gap:.3rem;z-index:3}
+.card-body{padding:1.25rem;flex:1;display:flex;flex-direction:column;gap:.25rem}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.card-loc{display:flex;align-items:center;gap:.35rem;color:var(--muted);font-size:.78rem;margin-top:.1rem}
+.card-dist{display:inline-flex;align-items:center;gap:.3rem;background:var(--gold-pale);color:var(--gold);font-size:.7rem;font-weight:600;padding:.2rem .55rem;border-radius:6px;margin-top:.35rem;width:fit-content;border:1px solid var(--gold-border)}
+.card-rating{display:flex;align-items:center;gap:.35rem;margin-top:.35rem;font-size:.75rem;color:var(--muted)}
+.stars-sm{color:var(--gold);font-size:.7rem;letter-spacing:.5px}
+.card-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+.ctag{background:var(--bg);border:1px solid var(--border);color:var(--muted);font-size:.7rem;font-weight:500;padding:.18rem .55rem;border-radius:6px}
+.card-footer{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-top:1px solid var(--border);margin-top:auto}
+.card-price{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;color:var(--gold)}
+.card-price small{font-family:'Inter',sans-serif;font-size:.72rem;font-weight:400;color:var(--muted)}
+.card-cta{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .9rem;background:var(--gold-pale);color:var(--gold);border:1.5px solid var(--gold-border);border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;transition:var(--tr);font-family:'Inter',sans-serif}
+.card-cta:hover{background:var(--gold);color:#fff;border-color:var(--gold)}
+
+/* SKELETON */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skel{background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:800px 100%;animation:shimmer 1.4s infinite}
+.skel-card{background:var(--white);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border)}
+.skel-img{height:210px}.skel-line{height:14px;border-radius:6px;margin:1.25rem 1.25rem .5rem}.skel-line-sm{height:10px;border-radius:6px;margin:.5rem 1.25rem;width:60%}
+
+/* EMPTY */
+.empty{text-align:center;padding:5rem 2rem;grid-column:1/-1}
+.empty-ico{font-size:3rem;color:var(--border);margin-bottom:1rem}
+.empty h3{font-family:'Cormorant Garamond',serif;font-size:1.5rem;margin-bottom:.5rem}
+.empty p{color:var(--muted);font-size:.875rem;margin-bottom:1.25rem}
+
+/* OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(14,12,8,.6);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .25s}
+[data-theme="dark"] .overlay{background:rgba(0,0,0,.75)}
+.overlay.on{opacity:1;pointer-events:all}
+
+/* AUTH MODAL */
+.auth-box{background:var(--white);border-radius:var(--radius-lg);width:100%;max-width:440px;overflow:hidden;transform:translateY(24px) scale(.97);transition:transform .3s;box-shadow:var(--shadow-lg)}
+.overlay.on .auth-box{transform:translateY(0) scale(1)}
+.am-head{padding:1.5rem 1.75rem 0;display:flex;justify-content:space-between;align-items:center}
+.am-head h2{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700}
+.xbtn{background:var(--bg);border:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:.85rem;transition:var(--tr)}
+.xbtn:hover{background:var(--border);color:var(--ink)}
+.am-body{padding:1.5rem 1.75rem}
+.am-foot{padding:1rem 1.75rem 1.5rem;border-top:1px solid var(--border);text-align:center}
+.am-foot p{font-size:.8rem;color:var(--muted)}
+.am-foot a{color:var(--gold);font-weight:600;cursor:pointer}
+.fg{margin-bottom:1rem}
+.fg label{display:block;font-size:.75rem;font-weight:600;color:var(--slate);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.4px}
+.fg .iw{position:relative}
+.fg .iw i{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.8rem;pointer-events:none}
+.fg input{width:100%;padding:.65rem .9rem .65rem 2.35rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.875rem;color:var(--ink);background:var(--bg);outline:none;transition:border-color .2s}
+.fg input:focus{border-color:var(--gold);background:var(--white)}
+.fg input::placeholder{color:var(--muted)}
+.ferr{color:var(--red);font-size:.75rem;margin-top:.3rem;display:flex;align-items:center;gap:.3rem}
+.fok{background:var(--green-pale);border:1px solid #b6dfca;color:var(--green);border-radius:9px;padding:.7rem 1rem;font-size:.83rem;margin-bottom:.9rem;display:flex;align-items:center;gap:.5rem}
+.fdiv{text-align:center;color:var(--muted);font-size:.78rem;margin:.8rem 0;position:relative}
+.fdiv::before,.fdiv::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
+.fdiv::before{left:0}.fdiv::after{right:0}
+.fbtn{width:100%;padding:.72rem;border-radius:10px;font-family:'Inter',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer;border:none;transition:var(--tr);display:flex;align-items:center;justify-content:center;gap:.5rem}
+.fbtn-slate{background:var(--slate);color:#fff}.fbtn-slate:hover{background:var(--slate2)}
+.fbtn-slate:disabled{opacity:.6;cursor:not-allowed}
+
+/* GATE CARD */
+.gate-wrap{background:var(--white);border-radius:var(--radius-lg);overflow:hidden;width:100%;max-width:440px;transform:translateY(24px) scale(.97);transition:transform .3s;box-shadow:var(--shadow-lg)}
+.overlay.on .gate-wrap{transform:translateY(0) scale(1)}
+.gate-blur{height:200px;position:relative;overflow:hidden}
+.gate-blur img{width:100%;height:100%;object-fit:cover;filter:blur(8px) brightness(.45);transform:scale(1.08)}
+.gate-blur-ph{width:100%;height:100%;background:linear-gradient(135deg,#1a2535,#0e1520);display:flex;align-items:center;justify-content:center;font-size:4rem;color:rgba(255,255,255,.1)}
+.gate-close{position:absolute;top:.75rem;left:.75rem;z-index:5;background:rgba(0,0,0,.45);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem}
+.gate-body{padding:2rem;text-align:center}
+.gate-ico{font-size:2rem;color:var(--gold);margin-bottom:.75rem}
+.gate-body h3{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;margin-bottom:.5rem}
+.gate-body p{font-size:.82rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.6}
+.gate-btns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+
+/* DETAIL MODAL */
+.det-box{background:var(--white);border-radius:var(--radius-lg);width:100%;max-width:720px;max-height:92vh;overflow-y:auto;transform:translateY(24px) scale(.97);transition:transform .3s;box-shadow:var(--shadow-lg)}
+.overlay.on .det-box{transform:translateY(0) scale(1)}
+.dg-wrap{position:relative;height:320px;background:#0e1520;overflow:hidden}
+.dg-track{display:flex;height:100%;transition:transform .48s cubic-bezier(.4,0,.2,1)}
+.dg-slide{min-width:100%;height:100%;flex-shrink:0}
+.dg-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.dg-noimg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:6rem;color:rgba(255,255,255,.08)}
+.dg-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;transition:var(--tr)}
+.dg-arrow:hover{background:rgba(255,255,255,.32)}.dg-arrow.prev{left:.85rem}.dg-arrow.next{right:.85rem}
+.dg-dots{position:absolute;bottom:.8rem;left:50%;transform:translateX(-50%);display:flex;gap:.4rem;z-index:5}
+.dgd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.38);border:none;cursor:pointer;padding:0;transition:var(--tr)}
+.dgd.on{background:#fff;width:20px;border-radius:3px}
+.dg-ctr{position:absolute;top:.8rem;right:.8rem;background:rgba(0,0,0,.5);color:#fff;font-size:.7rem;padding:.22rem .6rem;border-radius:99px;z-index:5}
+.dg-close{position:absolute;top:.8rem;left:.8rem;z-index:10;background:rgba(0,0,0,.45);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:var(--tr)}
+.dg-close:hover{background:rgba(0,0,0,.75)}
+.dg-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--gold);width:0;z-index:6}
+.dg-thumbs{display:flex;gap:.45rem;padding:.65rem;background:#080d14;overflow-x:auto;scrollbar-width:none}
+.dg-thumbs::-webkit-scrollbar{display:none}
+.dg-thumb{width:56px;height:42px;border-radius:6px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:var(--tr);opacity:.6;flex-shrink:0}
+.dg-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.dg-thumb.on{border-color:var(--gold);opacity:1}
+.det-body{padding:1.75rem}
+.det-row{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap}
+.det-title{font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:700;line-height:1.15}
+.det-stat{display:inline-flex;align-items:center;gap:.35rem;font-size:.73rem;font-weight:600;padding:.3rem .8rem;border-radius:99px;flex-shrink:0}
+.ds-av{background:var(--green-pale);color:var(--green)}.ds-oc{background:var(--red-pale);color:var(--red)}.ds-ma{background:#fef5e7;color:#d35400}
+[data-theme="dark"] .ds-ma{background:rgba(211,84,0,.15);color:#e8a060}
+.verified-badge{display:inline-flex;align-items:center;gap:.35rem;background:var(--gold-pale);color:var(--gold);border:1px solid var(--gold-border);border-radius:99px;padding:.28rem .8rem;font-size:.72rem;font-weight:700;margin:.4rem 0}
+.det-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin:.85rem 0;padding:.85rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.da-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.38rem .85rem;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--bg);color:var(--slate);transition:var(--tr);font-family:'Inter',sans-serif}
+.da-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+.da-btn.on{border-color:var(--red);color:var(--red);background:var(--red-pale)}
+.da-btn.wa:hover{border-color:#25d366;color:#fff;background:#25d366}
+.det-loc{display:flex;align-items:center;gap:.4rem;color:var(--muted);font-size:.85rem;margin:.5rem 0}
+.det-dist{display:inline-flex;align-items:center;gap:.35rem;background:var(--gold-pale);color:var(--gold);font-size:.75rem;font-weight:600;padding:.28rem .7rem;border-radius:8px;margin-bottom:1rem;border:1px solid var(--gold-border)}
+.det-price{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:700;color:var(--gold);margin-bottom:1.5rem}
+.det-price small{font-family:'Inter',sans-serif;font-size:.82rem;font-weight:400;color:var(--muted)}
+.det-sec{margin-bottom:1.5rem}
+.det-sec h4{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:.65rem;display:flex;align-items:center;gap:.4rem}
+.det-sec h4 i{color:var(--gold)}
+.det-sec p{font-size:.875rem;line-height:1.7;color:var(--ink)}
+.amen-wrap{display:flex;flex-wrap:wrap;gap:.4rem}
+.amen-pill{display:inline-flex;align-items:center;gap:.35rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.32rem .75rem;font-size:.78rem}
+.amen-pill i{color:var(--gold);font-size:.7rem}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.info-item{display:flex;align-items:center;gap:.5rem;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:.55rem .8rem;font-size:.8rem;color:var(--slate)}
+.info-item i{color:var(--gold);width:14px;text-align:center;flex-shrink:0}
+.contact-strip{background:linear-gradient(135deg,var(--slate),#1e2d3d);border-radius:12px;padding:1.1rem 1.35rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap}
+.cs-l small{color:rgba(255,255,255,.5);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
+.cs-l p{color:#fff;font-weight:500;font-size:.9rem;margin-top:.15rem;display:flex;align-items:center;gap:.4rem}
+.cs-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+.btn-call{display:inline-flex;align-items:center;gap:.45rem;background:var(--gold);color:#fff;border:none;border-radius:9px;padding:.6rem 1.1rem;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:var(--tr)}
+.btn-call:hover{background:var(--gold2)}
+.btn-wa{display:inline-flex;align-items:center;gap:.45rem;background:#25d366;color:#fff;border:none;border-radius:9px;padding:.6rem 1.1rem;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:var(--tr)}
+.btn-wa:hover{background:#1ebe5b}
+.upd-note{font-size:.7rem;color:var(--muted);text-align:right;margin-top:1rem;display:flex;align-items:center;justify-content:flex-end;gap:.3rem}
+
+/* REVIEWS */
+.reviews-sec{margin-top:1.5rem}
+.rv-avg{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;padding:.85rem;background:var(--bg);border:1px solid var(--border);border-radius:10px}
+.rv-num{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:700;color:var(--gold);line-height:1}
+.rv-info{display:flex;flex-direction:column;gap:.15rem}
+.rv-stars{color:var(--gold);font-size:.9rem}
+.rv-cnt{font-size:.72rem;color:var(--muted)}
+.rv-form{background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:1.1rem;margin-bottom:1.2rem}
+.rv-form-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:.7rem}
+.star-row{display:flex;gap:.3rem;margin-bottom:.7rem}
+.star-row button{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--border);transition:color .15s;padding:0;line-height:1}
+.star-row button.on,.star-row button:hover{color:var(--gold)}
+.rv-textarea{width:100%;background:var(--white);border:1.5px solid var(--border);border-radius:9px;padding:.65rem .85rem;font-family:'Inter',sans-serif;font-size:.83rem;color:var(--ink);outline:none;resize:none;transition:border-color .2s;display:block}
+.rv-textarea:focus{border-color:var(--gold)}
+.rv-textarea::placeholder{color:var(--muted)}
+.btn-rv{margin-top:.6rem;display:inline-flex;align-items:center;gap:.4rem;background:var(--slate);color:#fff;border:none;border-radius:8px;padding:.52rem 1.1rem;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:var(--tr)}
+.btn-rv:hover{background:var(--slate2)}
+.btn-rv:disabled{opacity:.55;cursor:not-allowed}
+.rv-list{display:flex;flex-direction:column;gap:.75rem}
+.rv-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem}
+.rv-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.3rem}
+.rv-name{font-size:.8rem;font-weight:600}
+.rv-item-stars{color:var(--gold);font-size:.7rem}
+.rv-date{font-size:.68rem;color:var(--muted)}
+.rv-comment{font-size:.82rem;color:var(--muted);line-height:1.55;margin-top:.3rem}
+.no-rv{font-size:.82rem;color:var(--muted);text-align:center;padding:1.2rem;border:1px dashed var(--border);border-radius:9px}
+
+/* AGENT CARD */
+.agent-strip{display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;background:var(--gold-pale);border:1px solid var(--gold-border);border-radius:10px;margin-bottom:1.25rem}
+.agent-avt{width:38px;height:38px;border-radius:50%;background:var(--slate);color:#fff;font-size:.82rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.agent-name{font-size:.82rem;font-weight:600;color:var(--ink)}
+.agent-agency{font-size:.72rem;color:var(--muted);margin-top:.1rem}
+.agent-badge{display:inline-flex;align-items:center;gap:.25rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;font-size:.6rem;font-weight:700;padding:.15rem .45rem;border-radius:99px;margin-top:.2rem;text-transform:uppercase;letter-spacing:.4px}
+.agent-actions{margin-left:auto;display:flex;gap:.4rem}
+.agent-wa{display:inline-flex;align-items:center;gap:.35rem;background:#25d366;color:#fff;border:none;border-radius:8px;padding:.4rem .85rem;font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:var(--tr)}
+.agent-wa:hover{background:#1ebe5b}
+.agent-inq{display:inline-flex;align-items:center;gap:.35rem;background:var(--slate);color:#fff;border:none;border-radius:8px;padding:.4rem .85rem;font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:var(--tr)}
+.agent-inq:hover{background:var(--slate2)}
+
+/* CARD AGENT TAG */
+.card-agent{display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--muted);margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)}
+.card-agent i{color:var(--gold);font-size:.65rem}
+.card-agent .ag-badge{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;font-size:.58rem;font-weight:700;padding:.1rem .35rem;border-radius:99px;margin-left:.2rem}
+
+/* INQUIRY MODAL */
+.inq-box{background:var(--white);border-radius:var(--radius-lg);width:100%;max-width:460px;overflow:hidden;transform:translateY(24px) scale(.97);transition:transform .3s;box-shadow:var(--shadow-lg)}
+.overlay.on .inq-box{transform:translateY(0) scale(1)}
+.inq-head{padding:1.35rem 1.75rem 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:1rem}
+.inq-head h3{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700}
+.inq-body{padding:1.35rem 1.75rem 1.75rem}
+.inq-listing-tag{background:var(--gold-pale);border:1px solid var(--gold-border);border-radius:8px;padding:.55rem .85rem;font-size:.8rem;color:var(--gold);font-weight:600;margin-bottom:1.1rem;display:flex;align-items:center;gap:.4rem}
+.inq-textarea{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;padding:.65rem .85rem;font-family:'Inter',sans-serif;font-size:.85rem;color:var(--ink);outline:none;resize:none;transition:border-color .2s;display:block;margin-bottom:.85rem}
+.inq-textarea:focus{border-color:var(--gold)}
+.inq-textarea::placeholder{color:var(--muted)}
+.inq-send{width:100%;padding:.72rem;border-radius:10px;font-family:'Inter',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer;border:none;transition:var(--tr);display:flex;align-items:center;justify-content:center;gap:.5rem;background:var(--slate);color:#fff}
+.inq-send:hover{background:var(--slate2)}
+.inq-send:disabled{opacity:.6;cursor:not-allowed}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;right:2rem;display:flex;align-items:center;gap:.6rem;background:var(--slate);color:#fff;padding:.8rem 1.25rem;border-radius:12px;font-size:.83rem;font-weight:500;z-index:999;transform:translateY(80px);opacity:0;transition:var(--tr);pointer-events:none;box-shadow:var(--shadow-lg)}
+.toast.on{transform:translateY(0);opacity:1}
+.toast.ok{border-left:3px solid var(--green)}.toast.warn{border-left:3px solid var(--gold)}.toast.err{border-left:3px solid var(--red)}
+
+/* LOADING */
+#appLoader{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;transition:opacity .4s}
+#appLoader .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MAP POPUP */
+.leaflet-popup-content .mp h4{font-weight:700;font-size:.9rem;margin-bottom:.2rem;font-family:'Inter',sans-serif}
+.leaflet-popup-content .mp .mploc{font-size:.75rem;color:#7a7265;margin-bottom:.3rem}
+.leaflet-popup-content .mp .mpprice{color:#b8832a;font-weight:700;font-size:.82rem;margin-bottom:.5rem}
+.leaflet-popup-content .mp button{background:#b8832a;color:#fff;border:none;border-radius:6px;padding:.35rem .85rem;font-size:.75rem;font-weight:600;cursor:pointer;width:100%}
+
+@media(max-width:640px){
+  .nav{padding:0 1rem;height:60px}
+  .hero{padding:3.5rem 1.25rem 3rem}
+  .fbar{padding:.75rem 1rem}
+  .main{padding:1.5rem 1rem}
+  .hero-stats{gap:1.5rem}
+  .list-view .card{flex-direction:column;max-height:none}
+  .list-view .card-gal{width:100%;height:200px;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+  .info-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="appLoader">
+  <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem">
+    <div style="width:32px;height:32px;background:var(--slate);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--gold2)"><i class="fa-solid fa-house-chimney"></i></div>
+    <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--ink)">Nest<span style="color:var(--gold)">ZM</span></span>
+  </div>
+  <div class="spinner"></div>
+  <p style="font-size:.8rem;color:var(--muted)">Connecting to database…</p>
+</div>
+
+<div id="userShell">
+<header class="nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-icon"><i class="fa-solid fa-house-chimney"></i></div>
+    <span class="nav-logo-text">Nest<span>ZM</span></span>
+  </a>
+  <div class="nav-right" id="navRight">
+    <button class="pbtn p-icon" id="themeBtn" onclick="toggleTheme()" title="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
+    <button class="pbtn p-ghost" onclick="openAuth('login')"><i class="fa-regular fa-circle-user"></i> Log In</button>
+    <button class="pbtn p-gold" onclick="openAuth('register')"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag"><i class="fa-solid fa-location-dot"></i> Zambia's #1 Boarding House Platform</div>
+    <h1>Find Your Ideal<br><em>Boarding House</em></h1>
+    <p class="hero-sub">Browse verified boarding houses across Lusaka, Ndola, Kitwe & more — all prices in Zambian Kwacha.</p>
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="Search by location, name, or amenity…" oninput="applyFilters()"/>
+      <button onclick="applyFilters()"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+    </div>
+    <div class="hero-stats">
+      <div><div class="hs-num" id="hTotal">—</div><div class="hs-lbl">Listings</div></div>
+      <div><div class="hs-num" id="hAvail">—</div><div class="hs-lbl">Available</div></div>
+      <div><div class="hs-num" id="hCities">5</div><div class="hs-lbl">Cities</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="fbar">
+  <span class="flbl">Filter</span>
+  <button class="fpill on" onclick="setFilter('all',this)">All</button>
+  <button class="fpill" onclick="setFilter('available',this)">Available</button>
+  <button class="fpill" onclick="setFilter('shared',this)">Shared Room</button>
+  <button class="fpill" onclick="setFilter('private',this)">Private Room</button>
+  <button class="fpill" id="favPill" onclick="setFilter('saved',this)"><i class="fa-solid fa-heart" style="font-size:.7rem"></i> Saved</button>
+  <select class="fsort" id="sortSel" onchange="applyFilters()">
+    <option value="">Newest First</option>
+    <option value="price_asc">Price: Low → High</option>
+    <option value="price_desc">Price: High → Low</option>
+    <option value="rating">Top Rated</option>
+  </select>
+  <div class="view-toggle">
+    <button class="vtbtn on" id="vgrid" onclick="setView('grid')" title="Grid"><i class="fa-solid fa-grip"></i></button>
+    <button class="vtbtn" id="vlist" onclick="setView('list')" title="List"><i class="fa-solid fa-list"></i></button>
+    <button class="vtbtn" id="vmap" onclick="setView('map')" title="Map"><i class="fa-solid fa-map-location-dot"></i></button>
+  </div>
+  <div class="fbar-adv">
+    <span class="flbl">Price (ZMW)</span>
+    <div class="price-range">
+      <span>K</span><input class="price-inp" type="number" id="priceMin" placeholder="Min" min="0" oninput="applyFilters()">
+      <span>–</span><input class="price-inp" type="number" id="priceMax" placeholder="Max" min="0" oninput="applyFilters()">
+    </div>
+    <span class="flbl" style="margin-left:.5rem">Gender</span>
+    <select class="adv-sel" id="genderSel" onchange="applyFilters()">
+      <option value="">Any</option>
+      <option value="Female Only">Female Only</option>
+      <option value="Male Only">Male Only</option>
+      <option value="Mixed">Mixed</option>
+    </select>
+  </div>
+</div>
+
+<main class="main">
+  <section id="recentSec">
+    <div class="recent-hdr"><i class="fa-regular fa-clock"></i> Recently Viewed</div>
+    <div class="recent-strip" id="recentStrip"></div>
+  </section>
+  <div class="sec-hdr">
+    <h2 class="sec-title">Browse Listings</h2>
+    <span class="count-chip" id="countChip">Loading…</span>
+  </div>
+  <div class="grid" id="listGrid">
+    <div class="skel-card"><div class="skel-img skel"></div><div class="skel skel-line"></div><div class="skel skel-line-sm"></div></div>
+    <div class="skel-card"><div class="skel-img skel"></div><div class="skel skel-line"></div><div class="skel skel-line-sm"></div></div>
+    <div class="skel-card"><div class="skel-img skel"></div><div class="skel skel-line"></div><div class="skel skel-line-sm"></div></div>
+  </div>
+  <div id="mapView"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="loginOv">
+  <div class="auth-box">
+    <div class="am-head"><h2>Welcome back</h2><button class="xbtn" onclick="closeOv('loginOv')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="am-body">
+      <div id="loginMsg"></div>
+      <div class="fg"><label>Email Address</label><div class="iw"><i class="fa-regular fa-envelope"></i><input type="email" id="lEmail" placeholder="you@example.com"/></div><div class="ferr" id="lEmailErr"></div></div>
+      <div class="fg"><label>Password</label><div class="iw"><i class="fa-solid fa-lock"></i><input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div><div class="ferr" id="lPassErr"></div></div>
+      <button class="fbtn fbtn-slate" id="loginBtn" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
+    </div>
+    <div class="am-foot"><p>No account yet? <a onclick="switchOv('loginOv','registerOv')">Create one free</a></p></div>
+  </div>
+</div>
+
+<div class="overlay" id="registerOv">
+  <div class="auth-box" style="max-width:480px">
+    <div class="am-head"><h2>Create Account</h2><button class="xbtn" onclick="closeOv('registerOv')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="am-body">
+      <div id="regMsg"></div>
+      <!-- Role toggle -->
+      <div style="display:flex;gap:.5rem;background:var(--bg);padding:.35rem;border-radius:10px;margin-bottom:1.1rem;border:1px solid var(--border)">
+        <button id="regTypeTenant" class="fbtn on" style="flex:1;padding:.45rem;font-size:.8rem;border-radius:8px;background:var(--slate);color:#fff;border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:600;transition:.2s" onclick="setRegType('tenant')"><i class="fa-solid fa-user"></i> I'm a Tenant</button>
+        <button id="regTypeAgent" class="fbtn" style="flex:1;padding:.45rem;font-size:.8rem;border-radius:8px;background:transparent;color:var(--muted);border:none;cursor:pointer;font-family:Inter,sans-serif;font-weight:600;transition:.2s" onclick="setRegType('agent')"><i class="fa-solid fa-user-tie"></i> I'm an Agent</button>
+      </div>
+      <div class="fg"><label>Full Name</label><div class="iw"><i class="fa-regular fa-user"></i><input type="text" id="rName" placeholder="Your full name"/></div><div class="ferr" id="rNameErr"></div></div>
+      <div class="fg"><label>Email Address</label><div class="iw"><i class="fa-regular fa-envelope"></i><input type="email" id="rEmail" placeholder="you@example.com"/></div><div class="ferr" id="rEmailErr"></div></div>
+      <!-- Agent extra fields -->
+      <div id="agentExtraFields" style="display:none">
+        <div class="fg"><label>Agency / Company Name</label><div class="iw"><i class="fa-solid fa-building" style="position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.8rem"></i><input type="text" id="rAgency" placeholder="e.g. Zambia Properties Ltd"/></div><div class="ferr" id="rAgencyErr"></div></div>
+        <div class="fg"><label>Phone Number</label><div class="iw"><i class="fa-solid fa-phone" style="position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.8rem"></i><input type="text" id="rPhone" placeholder="+260 977 000 000"/></div></div>
+        <div style="background:var(--gold-pale);border:1px solid var(--gold-border);border-radius:9px;padding:.65rem .85rem;font-size:.78rem;color:var(--gold);margin-bottom:.75rem;display:flex;align-items:flex-start;gap:.5rem"><i class="fa-solid fa-info-circle" style="margin-top:.1rem;flex-shrink:0"></i><span>Agent accounts require admin approval before you can post listings. You'll be notified once approved.</span></div>
+      </div>
+      <div class="fg"><label>Password</label><div class="iw"><i class="fa-solid fa-lock"></i><input type="password" id="rPass" placeholder="Min. 6 characters"/></div><div class="ferr" id="rPassErr"></div></div>
+      <div class="fg"><label>Confirm Password</label><div class="iw"><i class="fa-solid fa-lock"></i><input type="password" id="rPass2" placeholder="Repeat password"/></div><div class="ferr" id="rPass2Err"></div></div>
+      <button class="fbtn fbtn-slate" id="regBtn" onclick="doRegister()"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+    </div>
+    <div class="am-foot"><p>Already have an account? <a onclick="switchOv('registerOv','loginOv')">Sign in</a></p></div>
+  </div>
+</div>
+
+<div class="overlay" id="detailOv"><div id="detailBox"></div></div>
+
+<!-- INQUIRY MODAL -->
+<div class="overlay" id="inqOv">
+  <div class="inq-box">
+    <div class="inq-head">
+      <h3><i class="fa-solid fa-inbox" style="color:var(--gold);margin-right:.4rem"></i>Send Inquiry</h3>
+      <button class="xbtn" onclick="closeOv('inqOv')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="inq-body">
+      <div class="inq-listing-tag" id="inqListingTag"><i class="fa-solid fa-building"></i> <span id="inqListingName">Listing</span></div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.85rem">Your message will be sent to the agent. They will reply via the platform or contact you directly.</div>
+      <textarea class="inq-textarea" id="inqMsg" rows="4" placeholder="Hi, I am interested in this property. Please contact me with more details…"></textarea>
+      <div class="fg" style="margin-bottom:.85rem">
+        <label style="display:block;font-size:.72rem;font-weight:600;color:var(--slate);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.4px">Your WhatsApp (optional)</label>
+        <div style="position:relative"><i class="fa-brands fa-whatsapp" style="position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.8rem"></i><input type="text" id="inqPhone" placeholder="+260 977 000 000" style="width:100%;padding:.65rem .9rem .65rem 2.35rem;border:1.5px solid var(--border);border-radius:10px;font-family:Inter,sans-serif;font-size:.875rem;color:var(--ink);background:var(--bg);outline:none;transition:border-color .2s"/></div>
+      </div>
+      <button class="inq-send" id="inqSendBtn" onclick="sendInquiry()"><i class="fa-solid fa-paper-plane"></i> Send to Agent</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /#userShell -->
+
+<!-- AGENT PENDING SCREEN -->
+<div id="agentPendingScreen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:500;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;padding:2rem;text-align:center">
+  <div style="width:80px;height:80px;border-radius:50%;background:var(--gold-pale);border:2px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--gold)"><i class="fa-solid fa-hourglass-half"></i></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:var(--ink)">Application Under Review</div>
+  <div style="color:var(--muted);font-size:.9rem;max-width:360px;line-height:1.65">Your agent account has been submitted. The NestZM admin will review and approve you shortly. Check back soon!</div>
+  <button onclick="doLogout()" style="display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.25rem;border-radius:99px;font-size:.82rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--slate);font-family:Inter,sans-serif;transition:.2s"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+</div>
+
+<!-- AGENT DASHBOARD SHELL -->
+<div id="agentShell" style="display:none;min-height:100vh;background:var(--bg)">
+  <style>
+    /* ── AGENT SHELL STYLES ── */
+    #agentShell{--abg:#0b0f18;--as1:#111827;--as2:#1a2030;--as3:#212840;--aborder:#1e2a3b;--atext:#dfe4ee;--atext2:#7e8ba0;}
+    #agentShell *{box-sizing:border-box}
+    .ag-sidebar{position:fixed;left:0;top:0;bottom:0;width:250px;background:var(--as1);border-right:1px solid var(--aborder);display:flex;flex-direction:column;z-index:100;font-family:'Inter',sans-serif}
+    .ag-sb-logo{padding:1.4rem 1.5rem;border-bottom:1px solid var(--aborder);display:flex;align-items:center;gap:.6rem}
+    .ag-sb-logo-ico{width:34px;height:34px;background:var(--gold);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.9rem;flex-shrink:0}
+    .ag-sb-logo-txt{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:700;color:var(--atext)}
+    .ag-sb-logo-txt span{color:var(--gold)}
+    .ag-sb-sub{font-size:.6rem;color:var(--atext2);text-transform:uppercase;letter-spacing:1px;margin-left:auto;flex-shrink:0}
+    .ag-sb-nav{flex:1;padding:1rem 0;overflow-y:auto}
+    .ag-sb-sec{font-size:.62rem;font-weight:700;color:var(--atext2);text-transform:uppercase;letter-spacing:1px;padding:.5rem 1.5rem .25rem}
+    .ag-sb-btn{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.5rem;cursor:pointer;transition:.2s;font-size:.83rem;font-weight:500;color:var(--atext2);border-left:3px solid transparent;border-right:0;border-top:0;border-bottom:0;background:none;width:100%;font-family:'Inter',sans-serif;text-align:left}
+    .ag-sb-btn:hover{background:var(--as2);color:var(--atext)}
+    .ag-sb-btn.on{background:rgba(201,146,42,.1);color:var(--gold);border-left-color:var(--gold)}
+    .ag-sb-btn i{width:16px;text-align:center;flex-shrink:0;font-size:.82rem}
+    .ag-sb-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.62rem;font-weight:700;padding:.1rem .45rem;border-radius:99px}
+    .ag-sb-footer{padding:1.25rem 1.5rem;border-top:1px solid var(--aborder)}
+    .ag-sb-user{display:flex;align-items:center;gap:.65rem;margin-bottom:.85rem}
+    .ag-sb-avt{width:36px;height:36px;border-radius:50%;background:var(--gold);color:#fff;font-size:.82rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .ag-sb-uname{font-size:.83rem;font-weight:600;color:var(--atext)}
+    .ag-sb-urole{font-size:.7rem;color:var(--atext2)}
+    .ag-tier-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.65rem;font-weight:700;padding:.15rem .55rem;border-radius:99px;margin-top:.2rem}
+    .ag-tier-free{background:var(--as3);color:var(--atext2);border:1px solid var(--aborder)}
+    .ag-tier-prem{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff}
+    .ag-main{margin-left:250px;min-height:100vh;padding:2rem 2rem 3rem;background:#0b0f18;color:var(--atext)}
+    .ag-page{display:none}.ag-page.on{display:block}
+    .ag-pg-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--aborder)}
+    .ag-pg-title{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;line-height:1.15;color:var(--atext)}
+    .ag-pg-sub{font-size:.8rem;color:var(--atext2);margin-top:.25rem}
+    .ag-stat-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:2rem}
+    .ag-stat{background:var(--as1);border:1px solid var(--aborder);border-radius:12px;padding:1.25rem;transition:.2s;position:relative;overflow:hidden}
+    .ag-stat:hover{border-color:rgba(201,146,42,.25)}
+    .ag-stat-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.9rem;margin-bottom:.85rem}
+    .ag-si-g{background:rgba(201,146,42,.1);color:var(--gold)}.ag-si-gr{background:rgba(58,170,106,.1);color:#3aaa6a}.ag-si-r{background:rgba(224,85,85,.1);color:#e05555}.ag-si-b{background:rgba(79,156,249,.1);color:#4f9cf9}.ag-si-p{background:rgba(155,114,208,.1);color:#9b72d0}
+    .ag-stat-val{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;line-height:1;color:var(--atext)}
+    .ag-stat-lbl{font-size:.72rem;color:var(--atext2);margin-top:.25rem;text-transform:uppercase;letter-spacing:.5px}
+    .ag-tbl{background:var(--as1);border:1px solid var(--aborder);border-radius:12px;overflow:hidden;margin-bottom:1.5rem}
+    .ag-tbl-top{padding:1rem 1.25rem;border-bottom:1px solid var(--aborder);display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap}
+    .ag-tbl-lbl{font-size:.9rem;font-weight:600;color:var(--atext);display:flex;align-items:center;gap:.5rem}
+    .ag-tsrch{background:var(--as2);border:1.5px solid var(--aborder);border-radius:9px;padding:.42rem .85rem .42rem 2.1rem;color:var(--atext);font-family:'Inter',sans-serif;font-size:.8rem;outline:none;width:200px;transition:.2s}
+    .ag-tsrch:focus{border-color:var(--gold)}.ag-tsrch::placeholder{color:var(--atext2)}
+    .ag-tbl table{width:100%;border-collapse:collapse}
+    .ag-tbl th{padding:.7rem 1.1rem;text-align:left;font-size:.68rem;font-weight:700;color:var(--atext2);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--aborder);background:var(--as2)}
+    .ag-tbl td{padding:.85rem 1.1rem;font-size:.82rem;border-bottom:1px solid var(--aborder);vertical-align:middle;color:var(--atext)}
+    .ag-tbl tr:last-child td{border-bottom:none}
+    .ag-tbl tr:hover td{background:rgba(255,255,255,.015)}
+    .ag-tbl-empty{padding:3rem;text-align:center;color:var(--atext2)}
+    .ag-tbl-empty i{font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3}
+    .ag-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.25rem;border-radius:9px;font-family:'Inter',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer;border:none;transition:.2s;white-space:nowrap}
+    .ag-btn:disabled{opacity:.55;cursor:not-allowed}
+    .ag-btn-gold{background:var(--gold);color:#fff}.ag-btn-gold:hover:not(:disabled){background:var(--gold2)}
+    .ag-btn-slate{background:var(--as3);color:var(--atext);border:1px solid var(--aborder)}.ag-btn-slate:hover{border-color:var(--gold);color:var(--gold)}
+    .ag-btn-danger{background:rgba(224,85,85,.12);color:#e05555;border:1px solid rgba(224,85,85,.25)}.ag-btn-danger:hover{background:#e05555;color:#fff}
+    .ag-btn-edit{background:rgba(79,156,249,.12);color:#4f9cf9;border:1px solid rgba(79,156,249,.25)}.ag-btn-edit:hover{background:#4f9cf9;color:#fff}
+    .ag-btn-sm{padding:.35rem .75rem;font-size:.75rem}
+    .ag-btn-full{width:100%;justify-content:center;padding:.75rem}
+    .ag-sp{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;border-radius:99px;font-size:.7rem;font-weight:600}
+    .ag-sp-av{background:rgba(58,170,106,.12);color:#3aaa6a}.ag-sp-oc{background:rgba(224,85,85,.12);color:#e05555}.ag-sp-ma{background:rgba(232,140,48,.12);color:#e88c30}
+    .ag-act-cell{display:flex;gap:.35rem;flex-wrap:wrap}
+    .ag-thumb{width:46px;height:36px;border-radius:7px;object-fit:cover;border:1px solid var(--aborder)}
+    .ag-thumb-ph{width:46px;height:36px;border-radius:7px;background:var(--as3);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--atext2)}
+    /* Agent form */
+    .ag-form-card{background:var(--as1);border:1px solid var(--aborder);border-radius:12px;padding:1.75rem}
+    .ag-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .ag-fc{grid-column:1/-1}
+    .ag-sec-hd{font-size:.7rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;padding:.4rem 0 .6rem;border-bottom:1px solid var(--aborder);margin:1.5rem 0 1rem;display:flex;align-items:center;gap:.5rem}
+    .ag-fg{margin-bottom:.9rem}
+    .ag-fg label{display:block;font-size:.72rem;font-weight:700;color:var(--atext2);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.5px}
+    .ag-fg .ag-iw{position:relative}
+    .ag-fg .ag-iw i.icon{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--atext2);font-size:.8rem;pointer-events:none}
+    .ag-fg input,.ag-fg select,.ag-fg textarea{width:100%;padding:.65rem .9rem .65rem 2.35rem;background:var(--as2);border:1.5px solid var(--aborder);border-radius:10px;font-family:'Inter',sans-serif;font-size:.875rem;color:var(--atext);outline:none;transition:.2s;resize:vertical}
+    .ag-fg .no-icon{padding-left:.9rem}
+    .ag-fg input:focus,.ag-fg select:focus,.ag-fg textarea:focus{border-color:var(--gold)}
+    .ag-fg input::placeholder,.ag-fg textarea::placeholder{color:var(--atext2)}
+    .ag-fg select option{background:var(--as2)}
+    .ag-ferr{color:#e05555;font-size:.75rem;margin-top:.3rem;display:flex;align-items:center;gap:.3rem}
+    .ag-kpfx{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--gold);font-size:.82rem;font-weight:700;pointer-events:none}
+    .ag-k-inp{padding-left:2.2rem!important}
+    /* Dropzone */
+    .ag-dropzone{border:2px dashed var(--aborder);border-radius:11px;padding:2rem 1.5rem;text-align:center;cursor:pointer;transition:.2s;background:var(--as2)}
+    .ag-dropzone:hover,.ag-dropzone.drag{border-color:var(--gold);background:rgba(201,146,42,.08)}
+    .ag-dz-ico{font-size:2rem;color:var(--atext2);margin-bottom:.5rem}
+    .ag-dropzone p,.ag-dropzone small{color:var(--atext2);font-size:.82rem;margin-top:.35rem}
+    .ag-dropzone small{font-size:.72rem}
+    .ag-img-strip{display:flex;flex-wrap:wrap;gap:.65rem;margin-top:.75rem}
+    .ag-img-cell{position:relative;width:88px;height:68px;border-radius:9px;overflow:hidden;border:2px solid var(--aborder)}
+    .ag-img-cell img{width:100%;height:100%;object-fit:cover;display:block}
+    .ag-img-cover{position:absolute;bottom:2px;left:2px;background:var(--gold);color:#fff;font-size:.55rem;font-weight:700;padding:.1rem .4rem;border-radius:4px;text-transform:uppercase}
+    .ag-img-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+    .ag-img-del:hover{background:#e05555}
+    .ag-img-add{width:88px;height:68px;border-radius:9px;border:2px dashed var(--aborder);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--atext2);font-size:1.4rem;transition:.2s;gap:.2rem;background:var(--as2)}
+    .ag-img-add span{font-size:.65rem;font-weight:600}
+    .ag-img-add:hover{border-color:var(--gold);color:var(--gold)}
+    .ag-atags{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem}
+    .ag-atag{display:inline-flex;align-items:center;gap:.35rem;background:rgba(201,146,42,.1);border:1px solid rgba(201,146,42,.25);color:var(--gold);font-size:.75rem;font-weight:500;padding:.22rem .65rem;border-radius:99px}
+    .ag-atag button{background:none;border:none;color:var(--gold);cursor:pointer;font-size:.72rem;line-height:1;padding:0}
+    .ag-arow{display:flex;gap:.5rem;align-items:stretch}
+    .ag-arow input{flex:1;padding-left:.9rem}
+    /* Limit bar */
+    .ag-limit-wrap{background:var(--as1);border:1px solid var(--aborder);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem}
+    .ag-limit-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.65rem}
+    .ag-limit-track{height:8px;background:var(--as3);border-radius:99px;overflow:hidden}
+    .ag-limit-fill{height:100%;border-radius:99px;background:var(--gold);transition:width .6s}
+    .ag-limit-fill.danger{background:#e05555}
+    /* Inquiry cards */
+    .ag-inq-card{background:var(--as1);border:1px solid var(--aborder);border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;transition:.2s}
+    .ag-inq-card:hover{border-color:rgba(201,146,42,.25)}
+    .ag-inq-card.unread{border-left:3px solid var(--gold)}
+    /* Profile */
+    .ag-profile-card{background:var(--as1);border:1px solid var(--aborder);border-radius:18px;padding:2rem;margin-bottom:1.5rem}
+    .ag-profile-hdr{display:flex;align-items:center;gap:1.25rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--aborder)}
+    .ag-profile-avt{width:64px;height:64px;border-radius:50%;background:var(--gold);color:#fff;font-size:1.4rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .ag-profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem}
+    .ag-ps-item{text-align:center;padding:1rem;background:var(--as2);border-radius:12px}
+    .ag-ps-val{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--gold)}
+    .ag-ps-lbl{font-size:.7rem;color:var(--atext2);text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem}
+    /* Upgrade */
+    .ag-upgrade-card{background:linear-gradient(135deg,rgba(201,146,42,.12),rgba(201,146,42,.04));border:1px solid rgba(201,146,42,.25);border-radius:18px;padding:1.75rem;margin-bottom:1.5rem}
+    .ag-perk{display:flex;align-items:center;gap:.6rem;font-size:.82rem;color:var(--atext);margin-bottom:.5rem}
+    .ag-perk i{color:var(--gold);font-size:.75rem;width:14px}
+    /* Edit alert */
+    .ag-edit-alert{background:rgba(201,146,42,.08);border:1px solid rgba(201,146,42,.25);border-radius:10px;padding:.75rem 1rem;display:flex;align-items:center;gap:.65rem;font-size:.82rem;color:var(--gold);margin-bottom:1.5rem}
+    @media(max-width:900px){
+      .ag-sidebar{width:64px}
+      .ag-sb-logo-txt,.ag-sb-sub,.ag-sb-sec,.ag-sb-btn span,.ag-sb-badge,.ag-sb-uname,.ag-sb-urole,.ag-tier-badge{display:none}
+      .ag-sb-btn{justify-content:center;padding:.75rem}
+      .ag-main{margin-left:64px;padding:1.25rem}
+      .ag-form-grid{grid-template-columns:1fr}
+      .ag-profile-stats{grid-template-columns:1fr 1fr}
+    }
+  </style>
+
+  <aside class="ag-sidebar">
+    <div class="ag-sb-logo">
+      <div class="ag-sb-logo-ico"><i class="fa-solid fa-house-chimney"></i></div>
+      <span class="ag-sb-logo-txt">Nest<span>ZM</span></span>
+      <span class="ag-sb-sub">Agent</span>
+    </div>
+    <nav class="ag-sb-nav">
+      <div class="ag-sb-sec">Main</div>
+      <button class="ag-sb-btn on" onclick="agGoPage('dashboard',this)"><i class="fa-solid fa-chart-pie"></i><span>Dashboard</span></button>
+      <button class="ag-sb-btn" onclick="agGoPage('listings',this)"><i class="fa-solid fa-building"></i><span>My Listings</span><span class="ag-sb-badge" id="agSbCount" style="background:var(--gold);color:#fff;font-size:.62rem;font-weight:700;padding:.1rem .45rem;border-radius:99px;margin-left:auto">0</span></button>
+      <button class="ag-sb-btn" id="agAddNavBtn" onclick="agPrepAdd();agGoPage('form',this)"><i class="fa-solid fa-circle-plus"></i><span>Add Listing</span></button>
+      <div class="ag-sb-sec">Activity</div>
+      <button class="ag-sb-btn" onclick="agGoPage('inquiries',this)"><i class="fa-solid fa-inbox"></i><span>Inquiries</span><span class="ag-sb-badge" id="agInqBadge" style="display:none">0</span></button>
+      <div class="ag-sb-sec">Account</div>
+      <button class="ag-sb-btn" onclick="agGoPage('profile',this)"><i class="fa-solid fa-user-tie"></i><span>My Profile</span></button>
+      <button class="ag-sb-btn" onclick="agGoPage('upgrade',this)"><i class="fa-solid fa-crown"></i><span>Upgrade</span></button>
+      <div class="ag-sb-sec">Browse</div>
+      <button class="ag-sb-btn" onclick="switchToUserBrowse()"><i class="fa-solid fa-magnifying-glass"></i><span>Browse Listings</span></button>
+    </nav>
+    <div class="ag-sb-footer">
+      <div class="ag-sb-user">
+        <div class="ag-sb-avt" id="agSbAvt">AG</div>
+        <div>
+          <div class="ag-sb-uname" id="agSbName">Agent</div>
+          <div class="ag-sb-urole">Property Agent</div>
+          <div class="ag-tier-badge ag-tier-free" id="agSbTier">Free Plan</div>
+        </div>
+      </div>
+      <button class="ag-btn ag-btn-slate ag-btn-sm ag-btn-full" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> <span>Log Out</span></button>
+    </div>
+  </aside>
+
+  <div class="ag-main">
+    <!-- DASHBOARD -->
+    <div class="ag-page on" id="ag-page-dashboard">
+      <div class="ag-pg-hdr">
+        <div><div class="ag-pg-title" id="agDashGreet">Good day, Agent</div><div class="ag-pg-sub">Your listings performance at a glance</div></div>
+        <button class="ag-btn ag-btn-gold" onclick="agPrepAdd();agGoPage('form',document.getElementById('agAddNavBtn'))"><i class="fa-solid fa-plus"></i> New Listing</button>
+      </div>
+      <div class="ag-stat-row" id="agStatRow"></div>
+      <div id="agLimitBar"></div>
+      <div class="ag-tbl">
+        <div class="ag-tbl-top"><span class="ag-tbl-lbl"><i class="fa-solid fa-clock-rotate-left" style="color:var(--gold)"></i> Recent Listings</span><button class="ag-btn ag-btn-slate ag-btn-sm" onclick="agGoPage('listings',document.querySelectorAll('.ag-sb-btn')[1])">View All <i class="fa-solid fa-arrow-right"></i></button></div>
+        <table><thead><tr><th>Name</th><th>Location</th><th>Price</th><th>Status</th><th>Views</th></tr></thead><tbody id="agRecentTbody"></tbody></table>
+      </div>
+      <div id="agRecentInq"></div>
+    </div>
+
+    <!-- MY LISTINGS -->
+    <div class="ag-page" id="ag-page-listings">
+      <div class="ag-pg-hdr">
+        <div><div class="ag-pg-title">My Listings</div><div class="ag-pg-sub" id="agListSub">Loading…</div></div>
+        <button class="ag-btn ag-btn-gold" onclick="agPrepAdd();agGoPage('form',document.getElementById('agAddNavBtn'))"><i class="fa-solid fa-plus"></i> Add Listing</button>
+      </div>
+      <div class="ag-tbl">
+        <div class="ag-tbl-top">
+          <div style="position:relative"><i class="fa-solid fa-magnifying-glass" style="position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:var(--atext2);font-size:.75rem;pointer-events:none"></i><input class="ag-tsrch" type="text" placeholder="Search…" oninput="agRenderListings(this.value)"/></div>
+          <span class="ag-sp ag-sp-av" id="agListCount">0</span>
+        </div>
+        <table><thead><tr><th>Photo</th><th>Name</th><th>Location</th><th>Price/mo</th><th>Status</th><th>Slots</th><th>Views</th><th>Actions</th></tr></thead>
+        <tbody id="agListTbody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- FORM -->
+    <div class="ag-page" id="ag-page-form">
+      <div class="ag-pg-hdr">
+        <div><div class="ag-pg-title" id="agFormTitle">Add New Listing</div><div class="ag-pg-sub">Visible to users on NestZM after saving</div></div>
+        <button class="ag-btn ag-btn-slate" onclick="agCancelForm()"><i class="fa-solid fa-arrow-left"></i> Cancel</button>
+      </div>
+      <div id="agEditAlert" style="display:none" class="ag-edit-alert"><i class="fa-solid fa-pen-to-square"></i><span id="agEditAlertTxt"></span></div>
+      <div class="ag-form-card">
+        <input type="hidden" id="agEditId"/>
+        <div class="ag-sec-hd"><i class="fa-solid fa-circle-info"></i> Basic Information</div>
+        <div class="ag-form-grid">
+          <div class="ag-fg ag-fc"><label>Listing Name *</label><div class="ag-iw"><i class="icon fa-solid fa-house"></i><input type="text" id="agFName" placeholder="e.g. Green Valley Boarding House"/></div><div class="ag-ferr" id="agFNameErr"></div></div>
+          <div class="ag-fg ag-fc"><label>Location / Address *</label><div class="ag-iw"><i class="icon fa-solid fa-location-dot"></i><input type="text" id="agFLoc" placeholder="e.g. Lusaka, Woodlands"/></div><div class="ag-ferr" id="agFLocErr"></div></div>
+          <div class="ag-fg ag-fc"><label>Distance from Landmark</label><div class="ag-iw"><i class="icon fa-solid fa-route"></i><input type="text" id="agFDist" placeholder="e.g. 2.4 km from UNZA"/></div></div>
+          <div class="ag-fg ag-fc"><label>Description</label><textarea class="no-icon" id="agFDesc" rows="3" placeholder="Describe the property…"></textarea></div>
+        </div>
+        <div class="ag-sec-hd"><i class="fa-solid fa-money-bill-wave"></i> Pricing & Details</div>
+        <div class="ag-form-grid">
+          <div class="ag-fg"><label>Monthly Price (ZMW) *</label><div class="ag-iw"><span class="ag-kpfx">K</span><input type="number" class="ag-k-inp" id="agFPrice" placeholder="3500" min="0"/></div><div class="ag-ferr" id="agFPriceErr"></div></div>
+          <div class="ag-fg"><label>Available Slots</label><div class="ag-iw"><i class="icon fa-solid fa-users"></i><input type="number" id="agFSlots" placeholder="4" min="0"/></div></div>
+          <div class="ag-fg"><label>Room Type</label><div class="ag-iw"><i class="icon fa-solid fa-bed"></i><select id="agFRoom"><option value="">Select…</option><option value="private">Private Room</option><option value="shared">Shared Room</option><option value="studio">Studio / Self-contained</option></select></div></div>
+          <div class="ag-fg"><label>Status</label><div class="ag-iw"><i class="icon fa-solid fa-toggle-on"></i><select id="agFStatus"><option value="available">Available</option><option value="occupied">Occupied</option><option value="maintenance">Under Maintenance</option></select></div></div>
+          <div class="ag-fg"><label>Gender Policy</label><div class="ag-iw"><i class="icon fa-solid fa-venus-mars"></i><select id="agFGender"><option value="">No restriction</option><option value="Female Only">Female Only</option><option value="Male Only">Male Only</option><option value="Mixed">Mixed</option></select></div></div>
+          <div class="ag-fg"><label>Curfew Time</label><div class="ag-iw"><i class="icon fa-solid fa-clock"></i><input type="text" id="agFCurfew" placeholder="e.g. 10:00 PM"/></div></div>
+          <div class="ag-fg ag-fc"><label>Contact Number</label><div class="ag-iw"><i class="icon fa-solid fa-phone"></i><input type="text" id="agFContact" placeholder="+260 977 000 000"/></div></div>
+        </div>
+        <div class="ag-sec-hd"><i class="fa-solid fa-star"></i> Amenities</div>
+        <div class="ag-atags" id="agAtags"></div>
+        <div class="ag-arow">
+          <input class="no-icon" type="text" id="agAInput" placeholder="Type amenity and press Add…" style="background:var(--as2);border:1.5px solid var(--aborder);border-radius:10px;padding:.65rem .9rem;font-family:Inter,sans-serif;font-size:.875rem;color:var(--atext);outline:none;flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();agAddAmenity()}"/>
+          <button class="ag-btn ag-btn-slate" onclick="agAddAmenity()"><i class="fa-solid fa-plus"></i> Add</button>
+        </div>
+        <p style="font-size:.72rem;color:var(--atext2);margin-top:.4rem">Common: WiFi · Air Con · Water · Laundry · Parking · Kitchen · CCTV · Security · Borehole · DSTV</p>
+        <div class="ag-sec-hd"><i class="fa-solid fa-camera"></i> Photos</div>
+        <div class="ag-dropzone" id="agDropzone" onclick="document.getElementById('agFFile').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="agOnDrop(event)">
+          <div class="ag-dz-ico"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+          <p>Click to upload or drag & drop</p>
+          <small>JPG, PNG, WEBP · Multiple files supported</small>
+          <input type="file" id="agFFile" multiple accept="image/*" style="display:none" onchange="agOnFiles(this.files)"/>
+        </div>
+        <div class="ag-img-strip" id="agImgStrip"></div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:2rem;padding-top:1.25rem;border-top:1px solid var(--aborder)">
+          <button class="ag-btn ag-btn-slate" onclick="agCancelForm()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+          <button class="ag-btn ag-btn-gold" id="agSaveBtn" onclick="agSaveListing()" style="padding:.65rem 2rem"><i class="fa-solid fa-floppy-disk"></i> <span id="agSaveTxt">Save Listing</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INQUIRIES -->
+    <div class="ag-page" id="ag-page-inquiries">
+      <div class="ag-pg-hdr">
+        <div><div class="ag-pg-title">Inquiries</div><div class="ag-pg-sub">Messages from users about your listings</div></div>
+        <span class="ag-sp ag-sp-av" id="agInqCount">0</span>
+      </div>
+      <div id="agInqContainer"><div style="text-align:center;padding:3rem;color:var(--atext2)"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;display:block;margin-bottom:.75rem"></i>Loading…</div></div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="ag-page" id="ag-page-profile">
+      <div class="ag-pg-hdr">
+        <div><div class="ag-pg-title">My Profile</div><div class="ag-pg-sub">Your public agent profile</div></div>
+        <button class="ag-btn ag-btn-gold" onclick="agSaveProfile()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+      </div>
+      <div class="ag-profile-card">
+        <div class="ag-profile-hdr">
+          <div class="ag-profile-avt" id="agProfileAvt">AG</div>
+          <div><div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--atext)" id="agProfileName">Agent</div><div style="font-size:.8rem;color:var(--atext2);margin-top:.2rem" id="agProfileAgency"></div></div>
+        </div>
+        <div class="ag-profile-stats">
+          <div class="ag-ps-item"><div class="ag-ps-val" id="agPsListings">0</div><div class="ag-ps-lbl">Listings</div></div>
+          <div class="ag-ps-item"><div class="ag-ps-val" id="agPsViews">0</div><div class="ag-ps-lbl">Views</div></div>
+          <div class="ag-ps-item"><div class="ag-ps-val" id="agPsInq">0</div><div class="ag-ps-lbl">Inquiries</div></div>
+        </div>
+        <div class="ag-sec-hd"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</div>
+        <div class="ag-form-grid">
+          <div class="ag-fg"><label>Full Name</label><div class="ag-iw"><i class="icon fa-regular fa-user"></i><input type="text" id="agPName"/></div></div>
+          <div class="ag-fg"><label>Phone</label><div class="ag-iw"><i class="icon fa-solid fa-phone"></i><input type="text" id="agPPhone" placeholder="+260 977 000 000"/></div></div>
+          <div class="ag-fg ag-fc"><label>Agency / Company</label><div class="ag-iw"><i class="icon fa-solid fa-building"></i><input type="text" id="agPAgency"/></div></div>
+          <div class="ag-fg ag-fc"><label>Bio / About</label><textarea class="no-icon" id="agPBio" rows="3" placeholder="Tell users about yourself…"></textarea></div>
+          <div class="ag-fg"><label>WhatsApp</label><div class="ag-iw"><i class="icon fa-brands fa-whatsapp"></i><input type="text" id="agPWhatsapp" placeholder="+260 977 000 000"/></div></div>
+          <div class="ag-fg"><label>Area Covered</label><div class="ag-iw"><i class="icon fa-solid fa-map-location-dot"></i><input type="text" id="agPArea" placeholder="e.g. Lusaka, Ndola"/></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPGRADE -->
+    <div class="ag-page" id="ag-page-upgrade">
+      <div class="ag-pg-hdr"><div><div class="ag-pg-title">Upgrade Plan</div><div class="ag-pg-sub">Unlock unlimited listings and premium features</div></div></div>
+      <div class="ag-upgrade-card">
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--gold2);margin-bottom:.4rem"><i class="fa-solid fa-crown" style="margin-right:.4rem"></i>Premium Agent — K150/month</h3>
+        <p style="font-size:.85rem;color:var(--atext2);margin-bottom:1.25rem;line-height:1.6">Take your rental business to the next level with unlimited listings and a verified badge.</p>
+        <div class="ag-perk"><i class="fa-solid fa-check"></i> Unlimited listings (Free: 5 max)</div>
+        <div class="ag-perk"><i class="fa-solid fa-check"></i> Verified badge on all listings</div>
+        <div class="ag-perk"><i class="fa-solid fa-check"></i> Priority placement in search results</div>
+        <div class="ag-perk"><i class="fa-solid fa-check"></i> Inquiry inbox + WhatsApp alerts</div>
+        <div class="ag-perk"><i class="fa-solid fa-check"></i> Detailed per-listing analytics</div>
+        <div style="margin-top:1.25rem"><button class="ag-btn ag-btn-gold" style="padding:.7rem 2rem" onclick="agRequestUpgrade()"><i class="fa-solid fa-crown"></i> Upgrade Now via WhatsApp</button></div>
+      </div>
+    </div>
+  </div><!-- /.ag-main -->
+
+  <!-- AGENT REPLY MODAL -->
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:.22s" id="agReplyOv" onclick="if(event.target===this)agCloseModal('agReplyOv')">
+    <div style="background:var(--as1);border-radius:18px;border:1px solid var(--aborder);width:100%;max-width:460px;box-shadow:0 12px 48px rgba(0,0,0,.5);transform:translateY(20px);transition:transform .28s" id="agReplyModal">
+      <div style="padding:1.5rem 1.75rem 0;display:flex;justify-content:space-between;align-items:center"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:var(--atext)"><i class="fa-solid fa-reply" style="color:var(--gold)"></i> Reply to Inquiry</h3><button onclick="agCloseModal('agReplyOv')" style="background:var(--as2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--atext2);font-size:.8rem;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-xmark"></i></button></div>
+      <div style="padding:1.25rem 1.75rem 1.75rem">
+        <div id="agReplyDetail" style="background:var(--as2);border-radius:10px;padding:1rem;margin-bottom:1rem;font-size:.82rem;color:var(--atext2)"></div>
+        <div class="ag-fg"><label>Your Reply</label><textarea class="no-icon" id="agReplyTxt" rows="4" placeholder="Type your reply…" style="background:var(--as2);border:1.5px solid var(--aborder);border-radius:10px;padding:.65rem .85rem;font-family:Inter,sans-serif;font-size:.85rem;color:var(--atext);outline:none;resize:none;width:100%;display:block;margin-top:.4rem;transition:.2s"></textarea></div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.85rem">
+          <button class="ag-btn ag-btn-slate" onclick="agCloseModal('agReplyOv')">Cancel</button>
+          <button class="ag-btn ag-btn-gold" onclick="agSendReply()"><i class="fa-solid fa-paper-plane"></i> Send Reply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENT DELETE MODAL -->
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:.22s" id="agDelOv" onclick="if(event.target===this)agCloseModal('agDelOv')">
+    <div style="background:var(--as1);border-radius:18px;border:1px solid var(--aborder);width:100%;max-width:440px;box-shadow:0 12px 48px rgba(0,0,0,.5);transform:translateY(20px);transition:transform .28s">
+      <div style="padding:1.5rem 1.75rem 0;display:flex;justify-content:space-between;align-items:center"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:var(--atext)"><i class="fa-solid fa-triangle-exclamation" style="color:#e05555"></i> Delete Listing?</h3><button onclick="agCloseModal('agDelOv')" style="background:var(--as2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--atext2);font-size:.8rem;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-xmark"></i></button></div>
+      <div style="padding:1.25rem 1.75rem 1.75rem">
+        <p style="color:var(--atext2);font-size:.85rem;margin-bottom:.4rem">Permanently deleting:</p>
+        <p style="font-weight:600;font-size:.9rem;margin-bottom:1rem;color:var(--atext)" id="agDelName"></p>
+        <p style="color:var(--atext2);font-size:.8rem;margin-bottom:1.5rem">This cannot be undone.</p>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end">
+          <button class="ag-btn ag-btn-slate" onclick="agCloseModal('agDelOv')">Cancel</button>
+          <button class="ag-btn ag-btn-danger" id="agConfirmDelBtn" onclick="agConfirmDelete()"><i class="fa-solid fa-trash"></i> Delete Permanently</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /#agentShell -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, push, set, update, remove, increment }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged, updateProfile }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getStorage, ref as sRef, uploadBytesResumable, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig={apiKey:"AIzaSyCMRjLKxAQKtAFhqKAr68Nbz_tgXGlpKGc",authDomain:"thomaskabandama164-dot.github.io",databaseURL:"https://temwani-ac3ff-default-rtdb.firebaseio.com",projectId:"temwani-ac3ff",storageBucket:"temwani-ac3ff.firebasestorage.app",messagingSenderId:"890785950410",appId:"1:890785950410:web:52dc6737fa3f7d8a5be233"};
+const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app),storage=getStorage(app);
+
+let allListings=[],currentUser=null,activeFilter='all',activeView='grid',agentsData={};
+let favourites=new Set(),reviewRating=0,reviewsData={},inquiryTarget=null;
+// Agent dashboard state
+const FREE_LIMIT=5;
+let agentData=null,myListings=[],myInquiries=[],agentAmenities=[],agentImgs=[],agentPendingDel=null,agentEditId=null;
+let dgImages=[],dgIdx=0,dgTimer=null;
+const INTERVAL=4200,cardTimers={};
+const fmtK=p=>'K '+Number(p).toLocaleString();
+
+// ── CITY COORDS FOR MAP ────────────────────────────────────
+const CITIES={lusaka:[-15.4167,28.2833],woodlands:[-15.44,28.32],kabulonga:[-15.45,28.35],'garden compound':[-15.43,28.31],ndola:[-12.9588,28.6366],kitwe:[-12.8024,28.2132],livingstone:[-17.8614,25.8542],kabwe:[-14.447,28.4465],chipata:[-13.6333,32.65],solwezi:[-12.1667,26.3833],kasama:[-10.2128,31.1811],chingola:[-12.53,27.86],choma:[-16.803,26.985],kafue:[-15.7714,28.179],mazabuka:[-15.8566,27.7588],mongu:[-15.25,23.1333]};
+function getCoords(loc){
+  const l=(loc||'').toLowerCase();
+  for(const[city,c]of Object.entries(CITIES)) if(l.includes(city)) return [c[0]+(Math.random()-.5)*.06,c[1]+(Math.random()-.5)*.06];
+  return null;
+}
+
+// ── DARK MODE ─────────────────────────────────────────────
+function initTheme(){
+  const t=localStorage.getItem('nestzm-theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  updateThemeIcon(t);
+}
+function updateThemeIcon(t){
+  const b=document.getElementById('themeBtn');
+  if(b) b.innerHTML=t==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
+}
+window.toggleTheme=()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('nestzm-theme',next);
+  updateThemeIcon(next);
+};
+initTheme();
+
+// ── LOADER ─────────────────────────────────────────────────
+let _loaderHidden=false;
+function hideLoader(){
+  if(_loaderHidden) return; _loaderHidden=true;
+  const l=document.getElementById('appLoader');
+  l.style.opacity='0'; setTimeout(()=>l.style.display='none',400);
+}
+setTimeout(hideLoader,15000);
+
+// ── FAVOURITES ─────────────────────────────────────────────
+function loadFavourites(){
+  if(currentUser){
+    onValue(ref(db,'users/'+currentUser.uid+'/favourites'),snap=>{
+      favourites=new Set();
+      if(snap.exists()) snap.forEach(c=>favourites.add(c.key));
+      applyFilters();
+    });
+  } else {
+    try{favourites=new Set(JSON.parse(localStorage.getItem('nestzm-favs')||'[]'));}catch(e){favourites=new Set();}
+  }
+}
+window.toggleFav=async(id,e)=>{
+  if(e) e.stopPropagation();
+  if(!currentUser){
+    if(favourites.has(id)) favourites.delete(id); else favourites.add(id);
+    localStorage.setItem('nestzm-favs',JSON.stringify([...favourites]));
+    syncFavUI(id); if(activeFilter==='saved') applyFilters();
+    toast(favourites.has(id)?'<i class="fa-solid fa-heart"></i> Saved!':'<i class="fa-regular fa-heart"></i> Removed',favourites.has(id)?'ok':'');
+    return;
+  }
+  const fRef=ref(db,'users/'+currentUser.uid+'/favourites/'+id);
+  if(favourites.has(id)){await remove(fRef);toast('<i class="fa-regular fa-heart"></i> Removed from saved');}
+  else{await set(fRef,true);toast('<i class="fa-solid fa-heart"></i> Saved!','ok');}
+  syncFavUI(id);
+};
+function syncFavUI(id){
+  const on=favourites.has(id);
+  document.querySelectorAll(`.c-fav[data-id="${id}"]`).forEach(b=>{b.classList.toggle('on',on);b.innerHTML=on?'<i class="fa-solid fa-heart"></i>':'<i class="fa-regular fa-heart"></i>';});
+  const db2=document.getElementById('detFavBtn');
+  if(db2){db2.classList.toggle('on',on);db2.innerHTML=on?'<i class="fa-solid fa-heart"></i> Saved':'<i class="fa-regular fa-heart"></i> Save';}
+}
+
+// ── RECENTLY VIEWED ────────────────────────────────────────
+function addRecent(id){
+  let rv=[];try{rv=JSON.parse(localStorage.getItem('nestzm-rv')||'[]');}catch(e){}
+  rv=[id,...rv.filter(x=>x!==id)].slice(0,8);
+  localStorage.setItem('nestzm-rv',JSON.stringify(rv));
+  renderRecent();
+}
+function renderRecent(){
+  let rv=[];try{rv=JSON.parse(localStorage.getItem('nestzm-rv')||'[]');}catch(e){}
+  const sec=document.getElementById('recentSec'),strip=document.getElementById('recentStrip');
+  const items=rv.map(id=>allListings.find(l=>l.id===id)).filter(Boolean);
+  if(!items.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  strip.innerHTML=items.map(l=>`<div class="r-card" onclick="openDetail('${l.id}')">
+    ${l.images&&l.images[0]?`<img src="${l.images[0]}" alt="${l.name}" loading="lazy">`:`<div class="r-ph"><i class="fa-solid fa-house"></i></div>`}
+    <div class="r-info"><div class="r-name">${l.name}</div><div class="r-price">${fmtK(l.price)}/mo</div></div>
+  </div>`).join('');
+}
+
+// ── REVIEWS DATA ───────────────────────────────────────────
+onValue(ref(db,'reviews'),snap=>{
+  reviewsData={};
+  if(snap.exists()) snap.forEach(ls=>{reviewsData[ls.key]=[];ls.forEach(rv=>reviewsData[ls.key].push({id:rv.key,...rv.val()}));});
+});
+
+// Load approved agents for display on listings
+onValue(ref(db,'agents'),snap=>{
+  agentsData={};
+  if(snap.exists()) snap.forEach(c=>{
+    const a={uid:c.key,...c.val()};
+    if(a.status==='approved') agentsData[a.uid]=a;
+  });
+});
+
+// ── HELPERS ────────────────────────────────────────────────
+function avgRating(id){const rvs=reviewsData[id]||[];return rvs.length?rvs.reduce((s,r)=>s+r.rating,0)/rvs.length:0;}
+function starsHtml(r){const v=Math.round(r*2)/2;return[1,2,3,4,5].map(i=>`<i class="${v>=i?'fa-solid':v>=i-.5?'fa-regular fa-star-half-stroke':'fa-regular'} fa-star"></i>`).join('');}
+function withTimeout(p,ms=12000){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);}
+function setErr(id,msg){const el=document.getElementById(id);if(el)el.innerHTML=`<i class="fa-solid fa-circle-exclamation"></i> ${msg}`;}
+
+// ── AUTH STATE ─────────────────────────────────────────────
+onAuthStateChanged(auth,async user=>{
+  currentUser=user;
+  hideLoader();
+  if(user){
+    // Check if this user is an agent
+    const {get}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+    try{
+      const snap=await get(ref(db,'agents/'+user.uid));
+      if(snap.exists()){
+        agentData={uid:user.uid,...snap.val()};
+        showAgentView();
+        return;
+      }
+    }catch(e){console.warn('Agent check failed',e);}
+    agentData=null;
+    showUserView();
+  } else {
+    agentData=null;
+    showUserView();
+  }
+});
+
+function showUserView(){
+  document.getElementById('userShell').style.display='block';
+  document.getElementById('agentShell').style.display='none';
+  document.getElementById('agentPendingScreen').style.display='none';
+  refreshNav(); loadFavourites(); applyFilters();
+}
+
+function showAgentView(){
+  if(agentData.status==='pending'){
+    document.getElementById('userShell').style.display='none';
+    document.getElementById('agentShell').style.display='none';
+    document.getElementById('agentPendingScreen').style.display='flex';
+    return;
+  }
+  if(agentData.status==='suspended'){
+    document.getElementById('userShell').style.display='block';
+    document.getElementById('agentShell').style.display='none';
+    document.getElementById('agentPendingScreen').style.display='none';
+    refreshNav(); loadFavourites(); applyFilters();
+    setTimeout(()=>toast('<i class="fa-solid fa-ban"></i> Your agent account is suspended','warn'),600);
+    return;
+  }
+  // Approved agent
+  document.getElementById('userShell').style.display='none';
+  document.getElementById('agentPendingScreen').style.display='none';
+  document.getElementById('agentShell').style.display='block';
+  startAgentListeners();
+  renderAgentDashboard();
+  const name=agentData.name||'Agent';
+  const ini=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('agSbAvt').textContent=ini;
+  document.getElementById('agSbName').textContent=name.split(' ')[0];
+  const isPrem=agentData.tier==='premium';
+  document.getElementById('agSbTier').className='ag-tier-badge '+(isPrem?'ag-tier-prem':'ag-tier-free');
+  document.getElementById('agSbTier').innerHTML=isPrem?'<i class="fa-solid fa-crown"></i> Premium':'Free Plan';
+}
+
+// ── LISTINGS LISTENER ──────────────────────────────────────
+onValue(ref(db,'listings'),snap=>{
+  allListings=[];
+  if(snap.exists()) snap.forEach(c=>allListings.push({id:c.key,...c.val()}));
+  allListings.sort((a,b)=>(b.created||0)-(a.created||0));
+  document.getElementById('hTotal').textContent=allListings.length;
+  document.getElementById('hAvail').textContent=allListings.filter(l=>l.status==='available').length;
+  applyFilters(); renderRecent(); hideLoader();
+},err=>{
+  console.error('DB error:',err);
+  hideLoader();
+  toast('<i class="fa-solid fa-wifi"></i> Could not connect. Check your internet connection.','err');
+});
+
+// ── NAV ────────────────────────────────────────────────────
+function refreshNav(){
+  const el=document.getElementById('navRight');
+  const tm=document.documentElement.getAttribute('data-theme');
+  const themeBtn=`<button class="pbtn p-icon" id="themeBtn" onclick="toggleTheme()" title="Toggle dark mode"><i class="fa-solid ${tm==='dark'?'fa-sun':'fa-moon'}"></i></button>`;
+  if(currentUser){
+    const name=currentUser.displayName||currentUser.email.split('@')[0];
+    const ini=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    el.innerHTML=`${themeBtn}<div class="user-chip"><div class="u-avt">${ini}</div><span class="u-name">${name.split(' ')[0]}</span></div><button class="pbtn p-ghost" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>`;
+  } else {
+    el.innerHTML=`${themeBtn}<button class="pbtn p-ghost" onclick="openAuth('login')"><i class="fa-regular fa-circle-user"></i> Log In</button><button class="pbtn p-gold" onclick="openAuth('register')"><i class="fa-solid fa-user-plus"></i> Sign Up</button>`;
+  }
+}
+
+// ── OVERLAYS ───────────────────────────────────────────────
+window.openAuth=t=>document.getElementById(t==='login'?'loginOv':'registerOv').classList.add('on');
+window.closeOv=id=>{document.getElementById(id).classList.remove('on');stopDG();};
+window.switchOv=(a,b)=>{closeOv(a);setTimeout(()=>document.getElementById(b).classList.add('on'),160);};
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o){o.classList.remove('on');stopDG();if(o.id==='inqOv')inquiryTarget=null;}}));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') document.querySelectorAll('.overlay.on').forEach(o=>{o.classList.remove('on');stopDG();});
+  if(document.getElementById('detailOv').classList.contains('on')){if(e.key==='ArrowLeft')dgNav(-1);if(e.key==='ArrowRight')dgNav(1);}
+});
+
+// ── AUTH ───────────────────────────────────────────────────
+// ── REGISTER TYPE TOGGLE ──────────────────────────────────
+window.setRegType=type=>{
+  document.getElementById('regTypeTenant').classList.toggle('on',type==='tenant');
+  document.getElementById('regTypeAgent').classList.toggle('on',type==='agent');
+  document.getElementById('agentExtraFields').style.display=type==='agent'?'block':'none';
+  document.getElementById('regBtn').innerHTML=type==='agent'
+    ?'<i class="fa-solid fa-user-tie"></i> Apply as Agent'
+    :'<i class="fa-solid fa-user-plus"></i> Create Account';
+};
+
+window.doRegister=async()=>{
+  const isAgent=document.getElementById('regTypeAgent').classList.contains('on');
+  const name=document.getElementById('rName').value.trim(),email=document.getElementById('rEmail').value.trim();
+  const pass=document.getElementById('rPass').value,pass2=document.getElementById('rPass2').value;
+  const agency=isAgent?document.getElementById('rAgency').value.trim():'';
+  const phone=isAgent?document.getElementById('rPhone').value.trim():'';
+  let ok=true;
+  ['rNameErr','rEmailErr','rPassErr','rPass2Err'].forEach(id=>document.getElementById(id).innerHTML='');
+  if(document.getElementById('rAgencyErr')) document.getElementById('rAgencyErr').innerHTML='';
+  document.getElementById('regMsg').innerHTML='';
+  if(!name){setErr('rNameErr','Name is required');ok=false;}
+  if(!email||!/\S+@\S+\.\S+/.test(email)){setErr('rEmailErr','Valid email required');ok=false;}
+  if(pass.length<6){setErr('rPassErr','Minimum 6 characters');ok=false;}
+  if(pass!==pass2){setErr('rPass2Err','Passwords do not match');ok=false;}
+  if(isAgent&&!agency){setErr('rAgencyErr','Agency name required');ok=false;}
+  if(!ok) return;
+  const btn=document.getElementById('regBtn');
+  btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Creating…';
+  try{
+    const cred=await withTimeout(createUserWithEmailAndPassword(auth,email,pass));
+    await withTimeout(updateProfile(cred.user,{displayName:name}));
+    if(isAgent){
+      // Register as agent (pending approval)
+      await withTimeout(set(ref(db,'agents/'+cred.user.uid),{name,email,phone,agency,status:'pending',tier:'free',created:Date.now()}));
+      document.getElementById('regMsg').innerHTML='<div class="fok"><i class="fa-solid fa-circle-check"></i> Agent application submitted! Awaiting admin approval.</div>';
+    } else {
+      await withTimeout(set(ref(db,'users/'+cred.user.uid),{name,email,created:Date.now()}));
+      document.getElementById('regMsg').innerHTML='<div class="fok"><i class="fa-solid fa-circle-check"></i> Account created! Welcome aboard.</div>';
+    }
+    setTimeout(()=>closeOv('registerOv'),1400);
+  }catch(e){
+    let msg=e.message;
+    if(e.code==='auth/email-already-in-use') msg='Email already registered';
+    else if(e.message==='timeout') msg='Connection timed out. Please host this app online.';
+    else if(e.code==='auth/network-request-failed') msg='Network error. Check your connection.';
+    setErr('rEmailErr',msg);
+  }finally{btn.disabled=false;btn.innerHTML=isAgent?'<i class="fa-solid fa-user-tie"></i> Apply as Agent':'<i class="fa-solid fa-user-plus"></i> Create Account';}
+};
+window.doLogin=async()=>{
+  const email=document.getElementById('lEmail').value.trim(),pass=document.getElementById('lPass').value;
+  let ok=true;
+  ['lEmailErr','lPassErr'].forEach(id=>document.getElementById(id).innerHTML='');
+  document.getElementById('loginMsg').innerHTML='';
+  if(!email){setErr('lEmailErr','Email required');ok=false;}
+  if(!pass){setErr('lPassErr','Password required');ok=false;}
+  if(!ok) return;
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Signing in…';
+  try{
+    await withTimeout(signInWithEmailAndPassword(auth,email,pass));
+    closeOv('loginOv');toast('<i class="fa-solid fa-circle-check"></i> Welcome back!','ok');
+  }catch(e){
+    if(e.message==='timeout') setErr('lPassErr','Connection timed out. Please host this app online.');
+    else if(e.code==='auth/network-request-failed') setErr('lPassErr','Network error. Check your connection.');
+    else setErr('lPassErr','Invalid email or password');
+  }finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-right-to-bracket"></i> Log In';}
+};
+window.doLogout=async()=>{await signOut(auth);favourites=new Set();agentData=null;myListings=[];myInquiries=[];toast('<i class="fa-solid fa-right-from-bracket"></i> Logged out','warn');};
+
+// ── FILTER & VIEW ──────────────────────────────────────────
+window.setFilter=(f,el)=>{
+  activeFilter=f;
+  document.querySelectorAll('.fpill').forEach(p=>p.classList.remove('on','fav-on'));
+  el.classList.add(f==='saved'?'fav-on':'on');
+  applyFilters();
+};
+window.setView=v=>{
+  activeView=v;
+  ['grid','list','map'].forEach(x=>{const b=document.getElementById('v'+x);if(b)b.classList.toggle('on',x===v);});
+  const lg=document.getElementById('listGrid'),mv=document.getElementById('mapView');
+  lg.style.display=v==='map'?'none':'';
+  mv.style.display=v==='map'?'block':'none';
+  if(v==='grid') lg.className='grid';
+  if(v==='list') lg.className='list-view';
+  if(v==='map') initMap();
+  applyFilters();
+};
+function applyFilters(){
+  const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  const sort=document.getElementById('sortSel')?.value||'';
+  const pMin=parseFloat(document.getElementById('priceMin')?.value)||0;
+  const pMax=parseFloat(document.getElementById('priceMax')?.value)||Infinity;
+  const gender=document.getElementById('genderSel')?.value||'';
+  let list=[...allListings];
+  if(q) list=list.filter(l=>(l.name||'').toLowerCase().includes(q)||(l.location||'').toLowerCase().includes(q)||(l.amenities||[]).join(' ').toLowerCase().includes(q));
+  if(activeFilter==='available') list=list.filter(l=>l.status==='available');
+  if(activeFilter==='shared')    list=list.filter(l=>l.roomType==='shared');
+  if(activeFilter==='private')   list=list.filter(l=>l.roomType==='private');
+  if(activeFilter==='saved')     list=list.filter(l=>favourites.has(l.id));
+  if(pMin>0)       list=list.filter(l=>+l.price>=pMin);
+  if(pMax<Infinity) list=list.filter(l=>+l.price<=pMax);
+  if(gender)       list=list.filter(l=>(l.gender||'')===gender);
+  if(sort==='price_asc')  list.sort((a,b)=>+a.price-+b.price);
+  else if(sort==='price_desc') list.sort((a,b)=>+b.price-+a.price);
+  else if(sort==='rating') list.sort((a,b)=>avgRating(b.id)-avgRating(a.id));
+  if(activeView==='map'){renderMapMarkers(list);return;}
+  renderGrid(list);
+}
+window.applyFilters=applyFilters;
+
+// ── CARD SLIDESHOW ─────────────────────────────────────────
+function startCardSlide(id,total){
+  if(total<2) return; clearInterval(cardTimers[id]);
+  cardTimers[id]=setInterval(()=>{
+    const t=document.getElementById('ct_'+id);if(!t){clearInterval(cardTimers[id]);return;}
+    let c=parseInt(t.dataset.idx||0);c=(c+1)%total;t.style.transform=`translateX(-${c*100}%)`;t.dataset.idx=c;
+    document.querySelectorAll('.cdot_'+id).forEach((d,i)=>d.classList.toggle('on',i===c));
+  },3500);
+}
+window.cardGoSlide=(id,idx,total,e)=>{
+  if(e) e.stopPropagation(); clearInterval(cardTimers[id]);
+  const t=document.getElementById('ct_'+id);if(!t) return;
+  t.style.transform=`translateX(-${idx*100}%)`;t.dataset.idx=idx;
+  document.querySelectorAll('.cdot_'+id).forEach((d,i)=>d.classList.toggle('on',i===idx));
+  cardTimers[id]=setInterval(()=>{const tr=document.getElementById('ct_'+id);if(!tr){clearInterval(cardTimers[id]);return;}let c=parseInt(tr.dataset.idx||0);c=(c+1)%total;tr.style.transform=`translateX(-${c*100}%)`;tr.dataset.idx=c;document.querySelectorAll('.cdot_'+id).forEach((d,i)=>d.classList.toggle('on',i===c));},3500);
+};
+
+// ── RENDER GRID ────────────────────────────────────────────
+function renderGrid(list){
+  const grid=document.getElementById('listGrid');
+  document.getElementById('countChip').textContent=`${list.length} listing${list.length!==1?'s':''}`;
+  if(!list.length){
+    grid.innerHTML=`<div class="empty"><div class="empty-ico"><i class="fa-regular fa-building"></i></div>
+      <h3>${activeFilter==='saved'?'No saved listings yet':'No listings found'}</h3>
+      <p>${activeFilter==='saved'?'Tap ♥ on any listing to save it.':'Try a different search or filter.'}</p>
+      ${activeFilter==='saved'?`<button class="pbtn p-ghost" style="margin:0 auto" onclick="setFilter('all',document.querySelector('.fpill'))">Browse All</button>`:''}
+    </div>`;return;
+  }
+  grid.innerHTML=list.map(l=>{
+    const imgs=l.images&&l.images.length?l.images:[];
+    const multi=imgs.length>1;
+    const slides=imgs.length?imgs.map(s=>`<div class="c-slide"><img src="${s}" alt="${l.name}" loading="lazy"></div>`).join(''):`<div class="c-slide"><div class="c-noimg"><i class="fa-solid fa-house"></i></div></div>`;
+    const dots=multi?imgs.map((_,i)=>`<button class="cdot cdot_${l.id}${i===0?' on':''}" onclick="cardGoSlide('${l.id}',${i},${imgs.length},event)"></button>`).join(''):'';
+    const sC=l.status==='available'?'cb-av':l.status==='occupied'?'cb-oc':'cb-ma';
+    const isFav=favourites.has(l.id);
+    const rvs=reviewsData[l.id]||[];const avg=avgRating(l.id);
+    return `<div class="card" onclick="openDetail('${l.id}')">
+      <div class="card-gal">
+        <div class="c-track" id="ct_${l.id}" data-idx="0">${slides}</div>
+        <span class="cbadge ${sC}">${l.status||'for rent'}</span>
+        ${l.verified?'<span class="c-verified"><i class="fa-solid fa-circle-check" style="font-size:.6rem"></i> Verified</span>':''}
+        <button class="c-fav${isFav?' on':''}" data-id="${l.id}" onclick="toggleFav('${l.id}',event)"><i class="${isFav?'fa-solid':'fa-regular'} fa-heart"></i></button>
+        ${dots?`<div class="c-dots">${dots}</div>`:''}
+        ${multi?`<span class="c-count"><i class="fa-solid fa-camera"></i> ${imgs.length}</span>`:''}
+      </div>
+      <div class="card-body">
+        <div class="card-title">${l.name}</div>
+        <div class="card-loc"><i class="fa-solid fa-location-dot" style="color:var(--gold);font-size:.75rem"></i> ${l.location}</div>
+        ${l.distance?`<div class="card-dist"><i class="fa-solid fa-route"></i> ${l.distance}</div>`:''}
+        ${rvs.length?`<div class="card-rating"><span class="stars-sm">${starsHtml(avg)}</span><span>${avg.toFixed(1)}</span><span style="font-size:.7rem">(${rvs.length})</span></div>`:''}
+        <div class="card-tags">
+          ${l.roomType?`<span class="ctag"><i class="fa-solid fa-bed" style="color:var(--gold)"></i> ${l.roomType==='shared'?'Shared':'Private'} Room</span>`:''}
+          ${l.slots?`<span class="ctag"><i class="fa-solid fa-users" style="color:var(--gold)"></i> ${l.slots} slots</span>`:''}
+          ${(l.amenities||[]).slice(0,2).map(a=>`<span class="ctag">${a}</span>`).join('')}
+        </div>
+        ${l.agentId&&agentsData[l.agentId]?`<div class="card-agent"><i class="fa-solid fa-user-tie"></i> ${agentsData[l.agentId].name||'Agent'}${agentsData[l.agentId].agency?' · '+agentsData[l.agentId].agency:''}${l.agentTier==='premium'?'<span class="ag-badge"><i class="fa-solid fa-crown" style="font-size:.55rem"></i> Pro</span>':''}</div>`:''}
+      </div>
+      <div class="card-footer">
+        <div class="card-price">${fmtK(l.price)} <small>/mo</small></div>
+        <button class="card-cta">View Details <i class="fa-solid fa-arrow-right" style="font-size:.7rem"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+  list.forEach(l=>{const imgs=l.images&&l.images.length?l.images:[];if(imgs.length>1) setTimeout(()=>startCardSlide(l.id,imgs.length),400);});
+}
+
+// ── MAP ────────────────────────────────────────────────────
+let leafMap=null,mapMarkers=[];
+function initMap(){
+  const L=window.L;if(!L){document.getElementById('mapView').innerHTML='<p style="padding:2rem;text-align:center;color:var(--muted)">Map requires internet connection.</p>';return;}
+  if(!leafMap){
+    leafMap=L.map('mapView').setView([-14.5,28.5],6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(leafMap);
+  }
+}
+function renderMapMarkers(list){
+  const L=window.L;if(!leafMap||!L) return;
+  mapMarkers.forEach(m=>m.remove());mapMarkers=[];
+  list.forEach(l=>{
+    const c=getCoords(l.location);if(!c) return;
+    const col=l.status==='available'?'#2e7d52':l.status==='occupied'?'#c0392b':'#e67e22';
+    const icon=L.divIcon({className:'',html:`<div style="background:${col};color:#fff;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)"><span style="transform:rotate(45deg);font-size:.65rem;font-weight:700">K</span></div>`,iconSize:[34,34],iconAnchor:[17,34]});
+    const m=L.marker(c,{icon}).addTo(leafMap);
+    m.bindPopup(`<div class="mp"><h4>${l.name}</h4><div class="mploc">${l.location}</div><div class="mpprice">${fmtK(l.price)}/mo</div><button onclick="closeMapAndOpen('${l.id}')">View Details</button></div>`);
+    mapMarkers.push(m);
+  });
+  setTimeout(()=>leafMap&&leafMap.invalidateSize(),100);
+}
+window.closeMapAndOpen=id=>{setView('grid');setTimeout(()=>openDetail(id),100);};
+
+// ── DETAIL GALLERY ─────────────────────────────────────────
+function stopDG(){clearInterval(dgTimer);dgTimer=null;}
+function buildDG(imgs){
+  dgImages=imgs&&imgs.length?imgs:[];dgIdx=0;
+  if(!dgImages.length) return `<div class="dg-wrap"><div class="dg-noimg"><i class="fa-solid fa-image"></i></div></div>`;
+  const multi=dgImages.length>1;
+  const slides=dgImages.map((s,i)=>`<div class="dg-slide"><img src="${s}" alt="Photo ${i+1}" loading="lazy"></div>`).join('');
+  const dots=multi?dgImages.map((_,i)=>`<button class="dgd${i===0?' on':''}" onclick="dgGo(${i})"></button>`).join(''):'';
+  const thumbs=multi?`<div class="dg-thumbs">${dgImages.map((s,i)=>`<div class="dg-thumb${i===0?' on':''}" onclick="dgGo(${i})"><img src="${s}" loading="lazy"></div>`).join('')}</div>`:'';
+  return `<div class="dg-wrap">
+    <button class="dg-close" onclick="closeOv('detailOv');stopDG()"><i class="fa-solid fa-xmark"></i></button>
+    ${multi?`<button class="dg-arrow prev" onclick="dgNav(-1)"><i class="fa-solid fa-chevron-left"></i></button><button class="dg-arrow next" onclick="dgNav(1)"><i class="fa-solid fa-chevron-right"></i></button>`:''}
+    ${multi?`<span class="dg-ctr" id="dgCtr">1 / ${dgImages.length}</span>`:''}
+    <div class="dg-bar" id="dgBar"></div>
+    <div class="dg-track" id="dgTrack">${slides}</div>
+    ${multi?`<div class="dg-dots">${dots}</div>`:''}
+  </div>${thumbs}`;
+}
+window.dgGo=i=>{
+  if(!dgImages.length) return;
+  dgIdx=(i+dgImages.length)%dgImages.length;
+  const t=document.getElementById('dgTrack');if(t) t.style.transform=`translateX(-${dgIdx*100}%)`;
+  document.querySelectorAll('.dgd').forEach((d,j)=>d.classList.toggle('on',j===dgIdx));
+  document.querySelectorAll('.dg-thumb').forEach((th,j)=>{th.classList.toggle('on',j===dgIdx);if(j===dgIdx)th.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});});
+  const ctr=document.getElementById('dgCtr');if(ctr) ctr.textContent=`${dgIdx+1} / ${dgImages.length}`;
+  const bar=document.getElementById('dgBar');
+  if(bar){bar.style.transition='none';bar.style.width='0%';requestAnimationFrame(()=>requestAnimationFrame(()=>{bar.style.transition=`width ${INTERVAL}ms linear`;bar.style.width='100%';}));}
+  stopDG();if(dgImages.length>1) dgTimer=setInterval(()=>dgNav(1),INTERVAL);
+};
+window.dgNav=d=>dgGo(dgIdx+d);
+
+// ── SHARE ──────────────────────────────────────────────────
+window.shareListing=async(id,name,e)=>{
+  if(e) e.stopPropagation();
+  const text=`Check out "${name}" on NestZM!`;
+  if(navigator.share){try{await navigator.share({title:name,text,url:window.location.href});return;}catch(err){}}
+  try{await navigator.clipboard.writeText(text);toast('<i class="fa-solid fa-copy"></i> Copied to clipboard!','ok');}
+  catch(err){toast('<i class="fa-solid fa-share-nodes"></i> '+text,'ok');}
+};
+
+// ── REPORT ────────────────────────────────────────────────
+window.reportListing=async(id,e)=>{
+  if(e) e.stopPropagation();
+  if(!currentUser){toast('<i class="fa-solid fa-lock"></i> Sign in to report a listing','warn');return;}
+  const reason=prompt('Why are you reporting this listing?\n(e.g. inaccurate info, scam, no longer available)');
+  if(!reason) return;
+  try{await set(ref(db,'reports/'+id+'/'+currentUser.uid),{reason,uid:currentUser.uid,created:Date.now()});toast('<i class="fa-solid fa-flag"></i> Report submitted — thank you!','ok');}
+  catch(err){toast('<i class="fa-solid fa-circle-exclamation"></i> Report failed','err');}
+};
+
+// ── VIEW TRACKING ─────────────────────────────────────────
+function trackView(id){try{update(ref(db,'views/'+id),{count:increment(1),last:Date.now()});}catch(e){}}
+
+// ── REVIEWS ───────────────────────────────────────────────
+window.setRating=n=>{
+  reviewRating=n;
+  document.querySelectorAll('.star-row button').forEach((b,i)=>b.classList.toggle('on',i<n));
+};
+window.submitReview=async listId=>{
+  if(!currentUser){toast('<i class="fa-solid fa-lock"></i> Sign in to leave a review','warn');return;}
+  if(!reviewRating){toast('<i class="fa-solid fa-star"></i> Please select a rating','warn');return;}
+  const txt=(document.getElementById('rvTxt')||{}).value?.trim();
+  const btn=document.getElementById('rvBtn');
+  btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';
+  try{
+    const name=currentUser.displayName||currentUser.email.split('@')[0];
+    await push(ref(db,'reviews/'+listId),{uid:currentUser.uid,name,rating:reviewRating,comment:txt||'',created:Date.now()});
+    toast('<i class="fa-solid fa-star"></i> Review posted!','ok');
+    reviewRating=0;
+    document.querySelectorAll('.star-row button').forEach(b=>b.classList.remove('on'));
+    if(document.getElementById('rvTxt')) document.getElementById('rvTxt').value='';
+  }catch(err){toast('<i class="fa-solid fa-circle-exclamation"></i> Review failed','err');}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Post Review';}
+};
+function buildReviews(id){
+  const rvs=(reviewsData[id]||[]).sort((a,b)=>b.created-a.created);
+  const avg=avgRating(id);
+  const avgHtml=rvs.length?`<div class="rv-avg"><div class="rv-num">${avg.toFixed(1)}</div><div class="rv-info"><div class="rv-stars">${starsHtml(avg)}</div><div class="rv-cnt">${rvs.length} review${rvs.length>1?'s':''}</div></div></div>`:'';
+  const formHtml=currentUser
+    ?`<div class="rv-form"><div class="rv-form-title">Write a Review</div>
+        <div class="star-row">${[1,2,3,4,5].map(n=>`<button onclick="setRating(${n})"><i class="fa-solid fa-star"></i></button>`).join('')}</div>
+        <textarea class="rv-textarea" id="rvTxt" rows="3" placeholder="Share your experience (optional)…"></textarea>
+        <button class="btn-rv" id="rvBtn" onclick="submitReview('${id}')"><i class="fa-solid fa-paper-plane"></i> Post Review</button>
+      </div>`
+    :`<p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem;padding:.75rem;background:var(--bg);border-radius:9px;border:1px solid var(--border)">
+        <i class="fa-solid fa-lock" style="color:var(--gold)"></i> <a onclick="closeOv('detailOv');openAuth('login')" style="color:var(--gold);cursor:pointer;font-weight:600">Sign in</a> to leave a review.
+      </p>`;
+  const listHtml=rvs.length
+    ?rvs.slice(0,5).map(r=>`<div class="rv-item">
+        <div class="rv-head"><div><div class="rv-name">${r.name}</div><div class="rv-item-stars">${starsHtml(r.rating)}</div></div><div class="rv-date">${new Date(r.created).toLocaleDateString()}</div></div>
+        ${r.comment?`<div class="rv-comment">${r.comment}</div>`:''}
+      </div>`).join('')
+    :`<div class="no-rv"><i class="fa-regular fa-star"></i> No reviews yet — be the first!</div>`;
+  return `<div class="det-sec reviews-sec"><h4><i class="fa-solid fa-star"></i> Reviews & Ratings</h4>${avgHtml}${formHtml}<div class="rv-list">${listHtml}</div></div>`;
+}
+
+// ── OPEN DETAIL ────────────────────────────────────────────
+window.openDetail=id=>{
+  const l=allListings.find(x=>x.id===id);if(!l) return;
+  trackView(id);addRecent(id);
+  const box=document.getElementById('detailBox');
+  if(!currentUser){
+    box.innerHTML=`<div class="gate-wrap">
+      <div class="gate-blur">${l.images&&l.images[0]?`<img src="${l.images[0]}" alt="${l.name}">`:`<div class="gate-blur-ph"><i class="fa-solid fa-house"></i></div>`}
+        <button class="gate-close" onclick="closeOv('detailOv')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="gate-body"><div class="gate-ico"><i class="fa-solid fa-lock"></i></div>
+        <h3>Sign In to View Details</h3>
+        <p>Create a free account to see full details, all photos, pricing, and contact information for <strong>${l.name}</strong>.</p>
+        <div class="gate-btns">
+          <button class="pbtn p-gold" onclick="closeOv('detailOv');openAuth('login')"><i class="fa-solid fa-right-to-bracket"></i> Log In</button>
+          <button class="pbtn p-ghost" onclick="closeOv('detailOv');openAuth('register')"><i class="fa-solid fa-user-plus"></i> Sign Up Free</button>
+        </div></div></div>`;
+    document.getElementById('detailOv').classList.add('on');return;
+  }
+  stopDG();
+  const sC=l.status==='available'?'ds-av':l.status==='occupied'?'ds-oc':'ds-ma';
+  const isFav=favourites.has(id);
+  const waNum=(l.contact||'').replace(/[\s\-\(\)\+]/g,'');
+  box.innerHTML=`<div class="det-box">
+    ${buildDG(l.images)}
+    <div class="det-body">
+      <div class="det-row">
+        <div class="det-title">${l.name}</div>
+        <span class="det-stat ${sC}"><i class="fa-solid fa-circle" style="font-size:.4rem"></i> ${l.status||'For Rent'}</span>
+      </div>
+      ${l.verified?'<div class="verified-badge"><i class="fa-solid fa-circle-check"></i> Verified Listing</div>':''}
+      <div class="det-loc"><i class="fa-solid fa-location-dot" style="color:var(--gold)"></i> ${l.location}</div>
+      ${l.distance?`<div class="det-dist"><i class="fa-solid fa-route"></i> ${l.distance} from landmark</div>`:''}
+      <div class="det-price">${fmtK(l.price)}<small> / month</small></div>
+      <div class="det-actions">
+        <button id="detFavBtn" class="da-btn${isFav?' on':''}" onclick="toggleFav('${id}',event)"><i class="${isFav?'fa-solid':'fa-regular'} fa-heart"></i> ${isFav?'Saved':'Save'}</button>
+        <button class="da-btn" onclick="shareListing('${id}','${l.name.replace(/'/g,"\\'")}',event)"><i class="fa-solid fa-share-nodes"></i> Share</button>
+        <button class="da-btn" style="margin-left:auto" onclick="reportListing('${id}',event)"><i class="fa-solid fa-flag"></i> Report</button>
+      </div>
+      ${l.description?`<div class="det-sec"><h4><i class="fa-solid fa-circle-info"></i> About this Place</h4><p>${l.description}</p></div>`:''}
+      ${l.amenities&&l.amenities.length?`<div class="det-sec"><h4><i class="fa-solid fa-star"></i> Amenities</h4><div class="amen-wrap">${l.amenities.map(a=>`<span class="amen-pill"><i class="fa-solid fa-check"></i> ${a}</span>`).join('')}</div></div>`:''}
+      <div class="det-sec"><h4><i class="fa-solid fa-list"></i> Details</h4><div class="info-grid">
+        ${l.roomType?`<div class="info-item"><i class="fa-solid fa-bed"></i> ${l.roomType==='shared'?'Shared':'Private'} Room</div>`:''}
+        ${l.slots?`<div class="info-item"><i class="fa-solid fa-users"></i> ${l.slots} Slots</div>`:''}
+        ${l.gender?`<div class="info-item"><i class="fa-solid fa-venus-mars"></i> ${l.gender}</div>`:''}
+        ${l.curfew?`<div class="info-item"><i class="fa-solid fa-clock"></i> Curfew: ${l.curfew}</div>`:''}
+        ${l.distance?`<div class="info-item"><i class="fa-solid fa-route"></i> ${l.distance}</div>`:''}
+      </div></div>
+      ${l.contact?`<div class="contact-strip">
+        <div class="cs-l"><small>Contact Landlord</small><p><i class="fa-solid fa-phone"></i> ${l.contact}</p></div>
+        <div class="cs-btns">
+          <button class="btn-call" onclick="toast('<i class=fa-solid\\ fa-phone></i> ${l.contact.replace(/'/g,"\\'")}','ok')"><i class="fa-solid fa-phone-volume"></i> Call</button>
+          ${waNum?`<button class="btn-wa" onclick="window.open('https://wa.me/${waNum}?text=${encodeURIComponent('Hi, I am interested in '+l.name)}','_blank')"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>`:''}
+        </div></div>`:''}
+      ${buildAgentStrip(l)}
+      ${buildReviews(id)}
+      ${l.updated?`<div class="upd-note"><i class="fa-regular fa-clock"></i> Last updated ${new Date(l.updated).toLocaleDateString()}</div>`:''}
+    </div></div>`;
+  document.getElementById('detailOv').classList.add('on');
+  if(dgImages.length>1){const bar=document.getElementById('dgBar');if(bar){bar.style.transition=`width ${INTERVAL}ms linear`;bar.style.width='100%';}dgTimer=setInterval(()=>dgNav(1),INTERVAL);}
+};
+
+// ── AGENT STRIP & INQUIRY ──────────────────────────────────
+function buildAgentStrip(l){
+  if(!l.agentId) return '';
+  const agent=agentsData[l.agentId];
+  if(!agent) return '';
+  const ini=(agent.name||'A').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const isPrem=l.agentTier==='premium';
+  const waNum=(agent.whatsapp||agent.phone||'').replace(/[\s\-\(\)\+]/g,'');
+  return `<div class="agent-strip">
+    <div class="agent-avt">${ini}</div>
+    <div style="flex:1;min-width:0">
+      <div class="agent-name">${agent.name||'Agent'}</div>
+      <div class="agent-agency">${agent.agency||''}</div>
+      ${isPrem?'<span class="agent-badge"><i class="fa-solid fa-crown" style="font-size:.55rem"></i> Premium Agent</span>':''}
+    </div>
+    <div class="agent-actions">
+      ${waNum?`<button class="agent-wa" onclick="window.open('https://wa.me/${waNum}?text=${encodeURIComponent('Hi '+agent.name+', I am interested in '+l.name+'. Please contact me.')}','_blank');event.stopPropagation()"><i class="fa-brands fa-whatsapp"></i></button>`:''}
+      <button class="agent-inq" onclick="openInquiry('${l.id}','${l.name.replace(/'/g,"\\'")}','${l.agentId}');event.stopPropagation()"><i class="fa-solid fa-inbox"></i> Inquire</button>
+    </div>
+  </div>`;
+}
+
+window.openInquiry=(listingId,listingName,agentId)=>{
+  if(!currentUser){
+    closeOv('detailOv');
+    openAuth('login');
+    toast('<i class="fa-solid fa-lock"></i> Sign in to send an inquiry','warn');
+    return;
+  }
+  inquiryTarget={listingId,listingName,agentId};
+  document.getElementById('inqListingName').textContent=listingName;
+  document.getElementById('inqMsg').value='Hi, I am interested in this property. Please contact me with more details.';
+  document.getElementById('inqPhone').value='';
+  document.getElementById('inqOv').classList.add('on');
+};
+
+window.sendInquiry=async()=>{
+  if(!inquiryTarget||!currentUser) return;
+  const msg=document.getElementById('inqMsg').value.trim();
+  const phone=document.getElementById('inqPhone').value.trim();
+  if(!msg){toast('<i class="fa-solid fa-circle-exclamation"></i> Please type a message','warn');return;}
+  const btn=document.getElementById('inqSendBtn');
+  btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Sending…';
+  try{
+    await push(ref(db,'inquiries/'+inquiryTarget.listingId),{
+      agentId:inquiryTarget.agentId,
+      listingId:inquiryTarget.listingId,
+      listingName:inquiryTarget.listingName,
+      userId:currentUser.uid,
+      userName:currentUser.displayName||currentUser.email.split('@')[0],
+      userEmail:currentUser.email,
+      userPhone:phone||'',
+      message:msg,
+      read:false,
+      created:Date.now()
+    });
+    closeOv('inqOv');
+    toast('<i class="fa-solid fa-check"></i> Inquiry sent! The agent will contact you shortly.','ok');
+    inquiryTarget=null;
+  }catch(e){
+    toast('<i class="fa-solid fa-circle-exclamation"></i> Failed to send. Try again.','warn');
+    console.error(e);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Send to Agent';
+  }
+};
+
+// ── TOAST ──────────────────────────────────────────────────
+window.toast=(msg,type='')=>{
+  const t=document.getElementById('toast');
+  t.className='toast'+(type?' '+type:'');t.innerHTML=msg;t.classList.add('on');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),3200);
+};
+window.stopDG=stopDG;
+
+// ═══════════════════════════════════════════════════════════
+// AGENT DASHBOARD LOGIC
+// ═══════════════════════════════════════════════════════════
+let agentViews={},agentReplyTarget=null;
+
+function startAgentListeners(){
+  // My listings
+  onValue(ref(db,'listings'),snap=>{
+    myListings=[];
+    if(snap.exists()) snap.forEach(c=>{const l={id:c.key,...c.val()};if(l.agentId===agentData.uid) myListings.push(l);});
+    myListings.sort((a,b)=>(b.created||0)-(a.created||0));
+    document.getElementById('agSbCount').textContent=myListings.length;
+    renderAgentDashboard();
+    if(document.getElementById('ag-page-listings').classList.contains('on')) agRenderListings();
+  });
+  // Views
+  onValue(ref(db,'views'),snap=>{agentViews={};if(snap.exists()) snap.forEach(c=>agentViews[c.key]=c.val().count||0);renderAgentDashboard();});
+  // Inquiries
+  onValue(ref(db,'inquiries'),snap=>{
+    myInquiries=[];
+    if(snap.exists()) snap.forEach(ls=>ls.forEach(inqSnap=>{const i={id:inqSnap.key,listingId:ls.key,...inqSnap.val()};if(i.agentId===agentData.uid) myInquiries.push(i);}));
+    myInquiries.sort((a,b)=>(b.created||0)-(a.created||0));
+    const unread=myInquiries.filter(i=>!i.read).length;
+    const badge=document.getElementById('agInqBadge');
+    badge.style.display=unread>0?'flex':'none';badge.textContent=unread;
+    if(document.getElementById('ag-page-inquiries').classList.contains('on')) agRenderInquiries();
+    renderAgentDashboard();
+  });
+}
+
+// ── PAGES ──────────────────────────────────────────────────
+window.agGoPage=(name,el)=>{
+  document.querySelectorAll('.ag-page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ag-sb-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('ag-page-'+name).classList.add('on');
+  if(el) el.classList.add('on');
+  if(name==='listings') agRenderListings();
+  if(name==='inquiries') agRenderInquiries();
+  if(name==='profile') agRenderProfile();
+};
+window.agCloseModal=id=>{
+  const el=document.getElementById(id);
+  el.style.opacity='0';el.style.pointerEvents='none';
+  el.querySelector('div')&&(el.querySelector('div').style.transform='translateY(20px)');
+};
+function agOpenModal(id){
+  const el=document.getElementById(id);
+  el.style.opacity='1';el.style.pointerEvents='all';
+  el.querySelector('div')&&(el.querySelector('div').style.transform='translateY(0)');
+}
+
+// ── SWITCH TO BROWSE ────────────────────────────────────────
+window.switchToUserBrowse=()=>{
+  document.getElementById('agentShell').style.display='none';
+  document.getElementById('userShell').style.display='block';
+  refreshNav();loadFavourites();applyFilters();
+};
+
+// ── DASHBOARD ──────────────────────────────────────────────
+function renderAgentDashboard(){
+  if(!agentData||document.getElementById('agentShell').style.display==='none') return;
+  const avail=myListings.filter(l=>l.status==='available').length;
+  const occ=myListings.filter(l=>l.status==='occupied').length;
+  const totalViews=myListings.reduce((s,l)=>s+(agentViews[l.id]||0),0);
+  const unread=myInquiries.filter(i=>!i.read).length;
+  const name=agentData.name||'Agent';
+  document.getElementById('agDashGreet').textContent='Good day, '+name.split(' ')[0];
+  document.getElementById('agStatRow').innerHTML=
+    '<div class="ag-stat"><div class="ag-stat-ico ag-si-g"><i class="fa-solid fa-building"></i></div><div class="ag-stat-val" style="color:var(--gold)">'+myListings.length+'</div><div class="ag-stat-lbl">My Listings</div></div>'+
+    '<div class="ag-stat"><div class="ag-stat-ico ag-si-gr"><i class="fa-solid fa-circle-check"></i></div><div class="ag-stat-val" style="color:#3aaa6a">'+avail+'</div><div class="ag-stat-lbl">Available</div></div>'+
+    '<div class="ag-stat"><div class="ag-stat-ico ag-si-r"><i class="fa-solid fa-door-closed"></i></div><div class="ag-stat-val" style="color:#e05555">'+occ+'</div><div class="ag-stat-lbl">Occupied</div></div>'+
+    '<div class="ag-stat"><div class="ag-stat-ico ag-si-b"><i class="fa-solid fa-eye"></i></div><div class="ag-stat-val" style="color:#4f9cf9">'+totalViews+'</div><div class="ag-stat-lbl">Total Views</div></div>'+
+    '<div class="ag-stat"><div class="ag-stat-ico ag-si-p"><i class="fa-solid fa-inbox"></i></div><div class="ag-stat-val" style="color:#9b72d0">'+unread+'</div><div class="ag-stat-lbl">New Inquiries</div></div>';
+  const isPrem=agentData.tier==='premium';
+  const limitEl=document.getElementById('agLimitBar');
+  if(!isPrem){
+    const pct=Math.min(Math.round((myListings.length/FREE_LIMIT)*100),100);
+    const full=myListings.length>=FREE_LIMIT;
+    limitEl.innerHTML='<div class="ag-limit-wrap"><div class="ag-limit-top"><span style="font-size:.8rem;font-weight:600;color:var(--atext)"><i class="fa-solid fa-building" style="color:var(--gold);margin-right:.3rem"></i>Listing Slots</span><span style="font-size:.78rem;color:var(--atext2)">'+myListings.length+' / '+FREE_LIMIT+'</span></div><div class="ag-limit-track"><div class="ag-limit-fill'+(full?' danger':'')+'" style="width:'+pct+'%"></div></div><div style="font-size:.75rem;color:var(--atext2);margin-top:.6rem">'+(full?'<span style="color:#e05555"><i class="fa-solid fa-lock"></i> Limit reached.</span> ':'')+'<a style="color:var(--gold);cursor:pointer;font-weight:600" onclick="agGoPage('upgrade',document.querySelectorAll('.ag-sb-btn')[5])">Upgrade to Premium for unlimited listings →</a></div></div>';
+  } else { limitEl.innerHTML=''; }
+  const recent=myListings.slice(0,5);
+  document.getElementById('agRecentTbody').innerHTML=recent.length
+    ?recent.map(l=>'<tr><td style="font-weight:600;color:var(--atext)">'+l.name+'</td><td style="color:var(--atext2)">'+l.location+'</td><td style="color:var(--gold);font-weight:600">K '+Number(l.price).toLocaleString()+'</td><td><span class="ag-sp '+(l.status==='available'?'ag-sp-av':l.status==='occupied'?'ag-sp-oc':'ag-sp-ma')+'">'+l.status+'</span></td><td style="color:var(--atext2)">'+(agentViews[l.id]||0)+'</td></tr>').join('')
+    :'<tr><td colspan="5" class="ag-tbl-empty"><i class="fa-regular fa-building"></i>No listings yet</td></tr>';
+  const rInq=myInquiries.slice(0,3);
+  document.getElementById('agRecentInq').innerHTML=rInq.length
+    ?'<div style="margin-bottom:.75rem;font-size:.9rem;font-weight:600;color:var(--atext);display:flex;align-items:center;justify-content:space-between"><span><i class="fa-solid fa-inbox" style="color:var(--gold);margin-right:.4rem"></i>Recent Inquiries</span><button class="ag-btn ag-btn-slate ag-btn-sm" onclick="agGoPage('inquiries',document.querySelectorAll('.ag-sb-btn')[3])">View All</button></div>'+rInq.map(i=>agInqCardHtml(i)).join('')
+    :'';
+}
+
+// ── LISTINGS TABLE ─────────────────────────────────────────
+window.agRenderListings=(q='')=>{
+  let L=myListings;
+  if(q) L=L.filter(l=>(l.name||'').toLowerCase().includes(q.toLowerCase())||(l.location||'').toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('agListCount').textContent=L.length+' listing'+(L.length!==1?'s':'');
+  document.getElementById('agListSub').textContent=myListings.length+' total · '+(agentData&&agentData.tier==='premium'?'Unlimited':'Free: '+myListings.length+'/'+FREE_LIMIT);
+  const tbody=document.getElementById('agListTbody');
+  if(!L.length){tbody.innerHTML='<tr><td colspan="8" class="ag-tbl-empty"><i class="fa-regular fa-building"></i>No listings yet</td></tr>';return;}
+  tbody.innerHTML=L.map(l=>'<tr>'+
+    '<td>'+(l.images&&l.images[0]?'<img class="ag-thumb" src="'+l.images[0]+'" onerror="this.outerHTML='<div class=ag-thumb-ph><i class=fa-solid\\ fa-house></i></div>'">':`<div class="ag-thumb-ph"><i class="fa-solid fa-house"></i></div>`)+'</td>'+
+    '<td style="font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--atext)">'+l.name+'</td>'+
+    '<td style="color:var(--atext2);font-size:.78rem">'+l.location+'</td>'+
+    '<td style="color:var(--gold);font-weight:600">K '+Number(l.price).toLocaleString()+'</td>'+
+    '<td><span class="ag-sp '+(l.status==='available'?'ag-sp-av':l.status==='occupied'?'ag-sp-oc':'ag-sp-ma')+'">'+l.status+'</span></td>'+
+    '<td style="color:var(--atext2)">'+(l.slots||0)+'</td>'+
+    '<td style="color:var(--atext2);font-size:.75rem"><i class="fa-solid fa-eye" style="font-size:.65rem"></i> '+(agentViews[l.id]||0)+'</td>'+
+    '<td><div class="ag-act-cell">'+
+    '<button class="ag-btn ag-btn-edit ag-btn-sm" onclick="agEditListing(''+l.id+'')"><i class="fa-solid fa-pen-to-square"></i></button>'+
+    '<button class="ag-btn ag-btn-danger ag-btn-sm" onclick="agAskDelete(''+l.id+'')"><i class="fa-solid fa-trash"></i></button>'+
+    '</div></td></tr>').join('');
+};
+
+// ── INQUIRIES ──────────────────────────────────────────────
+function agInqCardHtml(inq){
+  const listing=myListings.find(l=>l.id===inq.listingId);
+  const waNum=(inq.userPhone||'').replace(/\D/g,'');
+  return '<div class="ag-inq-card'+(inq.read?'':' unread')+'">'+
+    '<div style="flex:1">'+
+    '<div style="font-weight:600;font-size:.85rem;color:var(--atext);margin-bottom:.2rem"><i class="fa-regular fa-user" style="color:var(--atext2);font-size:.8rem;margin-right:.35rem"></i>'+(inq.userName||'Anonymous')+'</div>'+
+    '<div style="font-size:.75rem;color:var(--gold);margin-bottom:.3rem"><i class="fa-solid fa-building" style="font-size:.7rem;margin-right:.3rem"></i>'+(listing?listing.name:inq.listingId)+'</div>'+
+    '<div style="font-size:.8rem;color:var(--atext2);line-height:1.5">'+inq.message+'</div>'+
+    (inq.reply?'<div style="margin-top:.5rem;padding:.5rem .75rem;background:rgba(201,146,42,.08);border-left:2px solid var(--gold);border-radius:0 8px 8px 0;font-size:.78rem;color:var(--gold2)"><i class="fa-solid fa-reply" style="margin-right:.3rem"></i>'+inq.reply+'</div>':'')+
+    '<div style="font-size:.68rem;color:var(--atext2);margin-top:.3rem">'+(inq.userEmail||'')+' · '+(inq.created?new Date(inq.created).toLocaleDateString():'')+'</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:.4rem;flex-shrink:0">'+
+    (!inq.reply?'<button class="ag-btn ag-btn-edit ag-btn-sm" onclick="agOpenReply(''+inq.id+'',''+inq.listingId+'')"><i class="fa-solid fa-reply"></i> Reply</button>':'<button class="ag-btn ag-btn-slate ag-btn-sm" onclick="agOpenReply(''+inq.id+'',''+inq.listingId+'')"><i class="fa-solid fa-pen"></i></button>')+
+    (waNum?'<a href="https://wa.me/'+waNum+'" target="_blank" class="ag-btn ag-btn-sm" style="background:rgba(37,211,102,.12);color:#25d366;border:1px solid rgba(37,211,102,.25);text-decoration:none"><i class="fa-brands fa-whatsapp"></i></a>':'')+
+    '</div></div>';
+}
+
+function agRenderInquiries(){
+  const container=document.getElementById('agInqContainer');
+  document.getElementById('agInqCount').textContent=myInquiries.length+' inquir'+(myInquiries.length!==1?'ies':'y');
+  if(!myInquiries.length){container.innerHTML='<div style="text-align:center;padding:3rem;color:var(--atext2)"><i class="fa-solid fa-inbox" style="font-size:2.5rem;display:block;margin-bottom:.75rem;opacity:.3"></i>No inquiries yet.</div>';return;}
+  container.innerHTML=myInquiries.map(i=>agInqCardHtml(i)).join('');
+  myInquiries.filter(i=>!i.read).forEach(i=>update(ref(db,'inquiries/'+i.listingId+'/'+i.id),{read:true}).catch(()=>{}));
+}
+
+window.agOpenReply=async(inqId,listingId)=>{
+  agentReplyTarget={inqId,listingId};
+  const inq=myInquiries.find(i=>i.id===inqId);
+  const listing=myListings.find(l=>l.id===listingId);
+  document.getElementById('agReplyDetail').innerHTML='<strong>'+(inq?.userName||'User')+':</strong> "'+(inq?.message||'')+'"<br><span style="font-size:.72rem;margin-top:.25rem;display:block">'+(listing?'Re: '+listing.name:'')+'</span>';
+  document.getElementById('agReplyTxt').value=inq?.reply||'';
+  agOpenModal('agReplyOv');
+};
+
+window.agSendReply=async()=>{
+  if(!agentReplyTarget) return;
+  const txt=document.getElementById('agReplyTxt').value.trim();
+  if(!txt){agToast('Please type a reply','warn');return;}
+  try{
+    await update(ref(db,'inquiries/'+agentReplyTarget.listingId+'/'+agentReplyTarget.inqId),{reply:txt,repliedAt:Date.now()});
+    agCloseModal('agReplyOv');agToast('<i class="fa-solid fa-check"></i> Reply sent!','ok');
+  }catch(e){agToast('Failed to send','warn');}
+};
+
+// ── PROFILE ────────────────────────────────────────────────
+function agRenderProfile(){
+  if(!agentData) return;
+  const ini=(agentData.name||'A').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('agProfileAvt').textContent=ini;
+  document.getElementById('agProfileName').textContent=agentData.name||'';
+  document.getElementById('agProfileAgency').textContent=agentData.agency||'';
+  document.getElementById('agPsListings').textContent=myListings.length;
+  document.getElementById('agPsViews').textContent=myListings.reduce((s,l)=>s+(agentViews[l.id]||0),0);
+  document.getElementById('agPsInq').textContent=myInquiries.length;
+  document.getElementById('agPName').value=agentData.name||'';
+  document.getElementById('agPPhone').value=agentData.phone||'';
+  document.getElementById('agPAgency').value=agentData.agency||'';
+  document.getElementById('agPBio').value=agentData.bio||'';
+  document.getElementById('agPWhatsapp').value=agentData.whatsapp||'';
+  document.getElementById('agPArea').value=agentData.area||'';
+}
+
+window.agSaveProfile=async()=>{
+  if(!agentData) return;
+  const data={name:document.getElementById('agPName').value.trim()||agentData.name,phone:document.getElementById('agPPhone').value.trim(),agency:document.getElementById('agPAgency').value.trim(),bio:document.getElementById('agPBio').value.trim(),whatsapp:document.getElementById('agPWhatsapp').value.trim(),area:document.getElementById('agPArea').value.trim(),updatedAt:Date.now()};
+  try{await update(ref(db,'agents/'+agentData.uid),data);agentData={...agentData,...data};agRenderProfile();agToast('<i class="fa-solid fa-check"></i> Profile saved!','ok');}
+  catch(e){agToast('Failed to save','warn');}
+};
+
+window.agRequestUpgrade=()=>{
+  const msg=encodeURIComponent('Hi NestZM Admin, I would like to upgrade my agent account to Premium. Name: '+(agentData.name||'')+', Agency: '+(agentData.agency||'')+', Email: '+(agentData.email||''));
+  window.open('https://wa.me/260977000000?text='+msg,'_blank');
+};
+
+// ── LISTING FORM ───────────────────────────────────────────
+window.agPrepAdd=()=>{
+  const isPrem=agentData&&agentData.tier==='premium';
+  if(!isPrem&&myListings.length>=FREE_LIMIT){agToast('<i class="fa-solid fa-lock"></i> Free plan limit reached. Upgrade to add more.','warn');agGoPage('upgrade',document.querySelectorAll('.ag-sb-btn')[5]);return;}
+  agResetForm();document.getElementById('agFormTitle').textContent='Add New Listing';document.getElementById('agSaveTxt').textContent='Save Listing';document.getElementById('agEditAlert').style.display='none';
+};
+
+function agResetForm(){
+  ['agFName','agFLoc','agFDist','agFDesc','agFPrice','agFSlots','agFCurfew','agFContact','agEditId'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('agFRoom').value='';document.getElementById('agFStatus').value='available';document.getElementById('agFGender').value='';
+  agentImgs.forEach(item=>{if(item&&!item.existing&&item.url.startsWith('blob:'))URL.revokeObjectURL(item.url);});
+  agentAmenities=[];agentImgs=[];agRenderAmenities();agRenderImgs();
+  ['agFNameErr','agFLocErr','agFPriceErr'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+}
+
+window.agCancelForm=()=>{agResetForm();agGoPage('listings',document.querySelectorAll('.ag-sb-btn')[1]);};
+
+window.agEditListing=id=>{
+  const l=myListings.find(x=>x.id===id);if(!l) return;
+  agResetForm();
+  document.getElementById('agEditId').value=l.id;
+  document.getElementById('agFName').value=l.name||'';document.getElementById('agFLoc').value=l.location||'';
+  document.getElementById('agFDist').value=l.distance||'';document.getElementById('agFDesc').value=l.description||'';
+  document.getElementById('agFPrice').value=l.price||'';document.getElementById('agFSlots').value=l.slots||'';
+  document.getElementById('agFRoom').value=l.roomType||'';document.getElementById('agFStatus').value=l.status||'available';
+  document.getElementById('agFGender').value=l.gender||'';document.getElementById('agFCurfew').value=l.curfew||'';
+  document.getElementById('agFContact').value=l.contact||'';
+  agentAmenities=[...(l.amenities||[])];agentImgs=(l.images||[]).map(url=>({url,file:null,existing:true}));
+  agRenderAmenities();agRenderImgs();
+  document.getElementById('agFormTitle').textContent='Edit Listing';document.getElementById('agSaveTxt').textContent='Save Changes';
+  document.getElementById('agEditAlert').style.display='flex';
+  document.getElementById('agEditAlertTxt').textContent='Editing "'+l.name+'" — changes sync instantly';
+  agGoPage('form',document.getElementById('agAddNavBtn'));
+};
+
+// ── AMENITIES ──────────────────────────────────────────────
+window.agAddAmenity=()=>{const inp=document.getElementById('agAInput'),v=inp.value.trim();if(!v||agentAmenities.includes(v))return;agentAmenities.push(v);inp.value='';agRenderAmenities();};
+function agRmAmenity(a){agentAmenities=agentAmenities.filter(x=>x!==a);agRenderAmenities();}
+window.agRmAmenity=agRmAmenity;
+function agRenderAmenities(){document.getElementById('agAtags').innerHTML=agentAmenities.map(a=>'<span class="ag-atag"><i class="fa-solid fa-check" style="font-size:.65rem"></i> '+a+'<button onclick="agRmAmenity(''+a.replace(/'/g,"\'")+'')" ><i class="fa-solid fa-xmark"></i></button></span>').join('');}
+
+// ── IMAGE UPLOAD ───────────────────────────────────────────
+function agCompressToBlob(file,maxW=1200,maxH=900,quality=0.80){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();r.onerror=rej;
+    r.onload=e=>{
+      const img=new Image();img.onerror=rej;
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>maxW||h>maxH){const sc=Math.min(maxW/w,maxH/h);w=Math.round(w*sc);h=Math.round(h*sc);}
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        c.toBlob(b=>b?res(b):rej(new Error('Compress failed')),'image/jpeg',quality);
+      };img.src=e.target.result;
+    };r.readAsDataURL(file);
+  });
+}
+function agUploadToStorage(blob,path){
+  return new Promise((res,rej)=>{
+    const storageRef=sRef(storage,path);
+    const task=uploadBytesResumable(storageRef,blob,{contentType:'image/jpeg'});
+    task.on('state_changed',snap=>{const pct=Math.round(snap.bytesTransferred/snap.totalBytes*100);document.getElementById('agSaveTxt').textContent='Uploading '+pct+'%…';},rej,async()=>res(await getDownloadURL(task.snapshot.ref)));
+  });
+}
+window.agOnFiles=files=>{Array.from(files).filter(f=>f.type.startsWith('image/')).forEach(f=>{agentImgs.push({url:URL.createObjectURL(f),file:f,existing:false});agRenderImgs();});document.getElementById('agFFile').value='';};
+window.agOnDrop=e=>{e.preventDefault();document.getElementById('agDropzone').classList.remove('drag');window.agOnFiles(e.dataTransfer.files);};
+function agRmImg(i){const item=agentImgs[i];if(item&&!item.existing&&item.url.startsWith('blob:'))URL.revokeObjectURL(item.url);agentImgs.splice(i,1);agRenderImgs();}
+window.agRmImg=agRmImg;
+function agRenderImgs(){
+  document.getElementById('agImgStrip').innerHTML=agentImgs.map((item,i)=>'<div class="ag-img-cell"><img src="'+item.url+'" alt="Photo '+(i+1)+'"/>'+(i===0?'<span class="ag-img-cover">Cover</span>':'')+(item.existing?'<span style="position:absolute;bottom:2px;right:2px;background:#3aaa6a;color:#fff;font-size:.5rem;font-weight:700;padding:.1rem .3rem;border-radius:4px">saved</span>':'')+'<button class="ag-img-del" onclick="agRmImg('+i+')"><i class="fa-solid fa-xmark"></i></button></div>').join('')+
+    '<div class="ag-img-add" onclick="document.getElementById('agFFile').click()"><i class="fa-solid fa-plus"></i><span>Add</span></div>';
+}
+
+// ── SAVE LISTING ───────────────────────────────────────────
+window.agSaveListing=async()=>{
+  const name=document.getElementById('agFName').value.trim(),loc=document.getElementById('agFLoc').value.trim(),price=document.getElementById('agFPrice').value.trim();
+  let ok=true;
+  ['agFNameErr','agFLocErr','agFPriceErr'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+  if(!name){document.getElementById('agFNameErr').innerHTML='<i class="fa-solid fa-circle-exclamation"></i> Name required';ok=false;}
+  if(!loc){document.getElementById('agFLocErr').innerHTML='<i class="fa-solid fa-circle-exclamation"></i> Location required';ok=false;}
+  if(!price||isNaN(price)||+price<1){document.getElementById('agFPriceErr').innerHTML='<i class="fa-solid fa-circle-exclamation"></i> Valid price required';ok=false;}
+  if(!ok) return;
+  const editId=document.getElementById('agEditId').value;
+  const orig=editId?myListings.find(l=>l.id===editId):null;
+  const btn=document.getElementById('agSaveBtn');btn.disabled=true;document.getElementById('agSaveTxt').textContent='Preparing…';
+  try{
+    const listingId=editId||(Date.now()+'_'+Math.random().toString(36).slice(2,8));
+    const imageUrls=[];
+    for(let i=0;i<agentImgs.length;i++){
+      const item=agentImgs[i];
+      if(item.existing){imageUrls.push(item.url);}
+      else{document.getElementById('agSaveTxt').textContent='Uploading photo '+(i+1)+' of '+agentImgs.length+'…';const blob=await agCompressToBlob(item.file);const url=await agUploadToStorage(blob,'listings/'+listingId+'/photo_'+Date.now()+'_'+i+'.jpg');imageUrls.push(url);}
+    }
+    document.getElementById('agSaveTxt').textContent='Saving…';
+    const data={name,location:loc,distance:document.getElementById('agFDist').value.trim(),price:+price,description:document.getElementById('agFDesc').value.trim(),slots:+document.getElementById('agFSlots').value||0,roomType:document.getElementById('agFRoom').value,status:document.getElementById('agFStatus').value,gender:document.getElementById('agFGender').value,curfew:document.getElementById('agFCurfew').value.trim(),contact:document.getElementById('agFContact').value.trim(),amenities:[...agentAmenities],images:imageUrls,agentId:agentData.uid,agentName:agentData.name,agentAgency:agentData.agency||'',agentTier:agentData.tier||'free',verified:agentData.tier==='premium',created:orig?orig.created:Date.now(),updated:Date.now()};
+    if(editId){await update(ref(db,'listings/'+editId),data);agToast('<i class="fa-solid fa-check"></i> Listing updated!','ok');}
+    else{const r=await push(ref(db,'listings'),data);if(!r||!r.key) throw new Error('Push failed');agToast('<i class="fa-solid fa-check"></i> Listing published!','ok');}
+    agResetForm();agGoPage('listings',document.querySelectorAll('.ag-sb-btn')[1]);
+  }catch(e){agToast('<i class="fa-solid fa-circle-exclamation"></i> Save failed: '+e.message,'warn');console.error(e);}
+  finally{btn.disabled=false;document.getElementById('agSaveTxt').textContent=editId?'Save Changes':'Save Listing';}
+};
+
+// ── DELETE ─────────────────────────────────────────────────
+window.agAskDelete=id=>{agentPendingDel=id;const l=myListings.find(x=>x.id===id);document.getElementById('agDelName').textContent=l?l.name:'this listing';agOpenModal('agDelOv');};
+window.agConfirmDelete=async()=>{
+  if(!agentPendingDel) return;
+  const btn=document.getElementById('agConfirmDelBtn');btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Deleting…';
+  try{await remove(ref(db,'listings/'+agentPendingDel));agentPendingDel=null;agCloseModal('agDelOv');agToast('<i class="fa-solid fa-trash"></i> Listing deleted','warn');}
+  catch(e){agToast('Delete failed','warn');}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-trash"></i> Delete Permanently';}
+};
+
+// ── AGENT TOAST ────────────────────────────────────────────
+function agToast(msg,type=''){
+  // Reuse existing toast element
+  const t=document.getElementById('toast');
+  t.className='toast'+(type?' '+type:'');t.innerHTML=msg;t.classList.add('on');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),3500);
+}
+</script>
+</body>
+</html>
