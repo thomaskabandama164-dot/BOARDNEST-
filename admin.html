@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZAP Rides — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+:root{--bg:#07090e;--sf:#0e1117;--sf2:#151b24;--sf3:#1c2530;--bd:#22303e;--ac:#2563eb;--acd:rgba(37,99,235,.1);--gr:#059669;--rd:#dc2626;--am:#d97706;--pu:#7c3aed;--tx:#dde4ed;--t2:#8496ac;--mt:#526070;--r:10px;--rs:6px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:14px;}
+/* AUTH */
+#authWrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem;}
+.auth-box{width:100%;max-width:380px;}
+.auth-logo{font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:800;letter-spacing:-.04em;margin-bottom:.2rem;}
+.auth-logo span{color:var(--ac);}
+.auth-badge{display:inline-flex;align-items:center;gap:.35rem;background:var(--acd);color:var(--ac);border:1px solid rgba(37,99,235,.25);border-radius:4px;font-size:.62rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;padding:2px 8px;margin-bottom:1.6rem;}
+.auth-card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.7rem;}
+.a-lbl{display:block;font-size:.7rem;font-weight:600;color:var(--mt);margin-bottom:.32rem;text-transform:uppercase;letter-spacing:.08em;}
+.a-inp{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:.64rem .82rem;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;transition:border-color .18s;margin-bottom:.95rem;}
+.a-inp:focus{border-color:var(--ac);}
+.a-btn{width:100%;padding:.7rem;background:var(--ac);border:none;border-radius:var(--rs);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;letter-spacing:.02em;transition:opacity .15s;}
+.a-btn:hover{opacity:.88;}
+.a-link{text-align:center;margin-top:.9rem;font-size:.78rem;color:var(--mt);}
+.a-link a{color:var(--ac);text-decoration:none;}
+.a-err{font-size:.74rem;color:var(--rd);margin-top:.4rem;display:none;}
+#appWrap{display:none;}
+.layout{display:flex;min-height:100vh;}
+/* SIDEBAR */
+.sidebar{width:216px;background:var(--sf);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:10;}
+.main-area{flex:1;margin-left:216px;display:flex;flex-direction:column;}
+.sb-brand{padding:1.15rem 1rem 1rem;border-bottom:1px solid var(--bd);}
+.sb-logo{font-family:'Syne',sans-serif;font-size:1.18rem;font-weight:800;letter-spacing:-.03em;}
+.sb-logo span{color:var(--ac);}
+.sb-tag{font-size:.58rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mt);margin-top:.12rem;}
+.sb-sec{padding:.5rem 0 .15rem;}
+.sb-lbl{font-size:.6rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mt);padding:.35rem .92rem .28rem;}
+.sb-item{display:flex;align-items:center;gap:.58rem;padding:.48rem .92rem .48rem .88rem;cursor:pointer;color:var(--t2);font-size:.82rem;font-weight:500;transition:all .15s;border-left:2px solid transparent;margin:0 .35rem 0 0;border-radius:0 7px 7px 0;}
+.sb-item:hover{color:var(--tx);background:var(--sf2);}
+.sb-item.active{color:var(--tx);background:var(--acd);border-left-color:var(--ac);}
+.sb-item svg{flex-shrink:0;opacity:.65;}
+.sb-item.active svg{opacity:1;}
+.sb-cnt{background:var(--rd);color:#fff;border-radius:9px;font-size:.58rem;font-weight:700;padding:1px 5px;margin-left:auto;display:none;}
+.sb-cnt.show{display:block;}
+.sb-foot{margin-top:auto;padding:.85rem 1rem;border-top:1px solid var(--bd);}
+.sb-usr{display:flex;align-items:center;gap:.58rem;}
+.sb-av{width:29px;height:29px;border-radius:7px;background:linear-gradient(135deg,var(--ac),#0891b2);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:.72rem;color:#fff;flex-shrink:0;}
+.sb-uname{font-size:.8rem;font-weight:600;font-family:'Syne',sans-serif;}
+.sb-urole{font-size:.62rem;color:var(--mt);}
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:.68rem 1.2rem;background:var(--sf);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:9;}
+.tb-title{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;}
+.tb-right{display:flex;align-items:center;gap:.5rem;}
+.live-badge{display:flex;align-items:center;gap:.32rem;background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.2);border-radius:20px;padding:.2rem .62rem;font-size:.67rem;font-weight:600;color:var(--gr);letter-spacing:.04em;}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--gr);animation:bk 1.5s infinite;}
+@keyframes bk{0%,100%{opacity:1;}50%{opacity:.25;}}
+.tb-btn{width:29px;height:29px;border-radius:var(--rs);background:var(--sf2);border:1px solid var(--bd);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mt);transition:all .15s;position:relative;}
+.tb-btn:hover{background:var(--sf3);color:var(--tx);}
+.nb{position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:var(--rd);border-radius:50%;font-size:.5rem;font-weight:700;color:#fff;display:none;align-items:center;justify-content:center;border:1.5px solid var(--sf);}
+.nb.show{display:flex;}
+.content{flex:1;padding:1.15rem;overflow-y:auto;}
+.page{display:none;}
+.page.active{display:block;}
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.05rem;}
+.stat-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:.92rem;}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;}
+.sc-lbl{font-size:.65rem;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.07em;}
+.sc-ico{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.sc-val{font-family:'DM Mono',monospace;font-size:1.42rem;font-weight:500;letter-spacing:-.02em;}
+.sc-sub{font-size:.66rem;color:var(--mt);margin-top:.18rem;}
+/* MAP */
+.map-layout{display:grid;grid-template-columns:1fr 245px;gap:.75rem;height:calc(100vh - 120px);}
+#adminMap{width:100%;height:100%;border-radius:var(--r);border:1px solid var(--bd);}
+.map-side{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:.82rem;overflow-y:auto;display:flex;flex-direction:column;gap:.42rem;}
+.map-side-ttl{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;margin-bottom:.28rem;}
+.ltc{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:.62rem;cursor:pointer;transition:border-color .15s;}
+.ltc:hover{border-color:var(--ac);}
+.ltc-id{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--mt);}
+.ltc-route{font-size:.75rem;font-weight:600;margin:.15rem 0;font-family:'Syne',sans-serif;}
+.ltc-meta{font-size:.65rem;color:var(--mt);}
+/* TABLES */
+.tbl-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:1.05rem;}
+.tbl-head{padding:.75rem 1rem;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;}
+.tbl-ttl{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;}
+table{width:100%;border-collapse:collapse;}
+th{padding:.5rem 1rem;text-align:left;font-size:.6rem;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--bd);background:var(--sf2);}
+td{padding:.66rem 1rem;font-size:.77rem;border-bottom:1px solid var(--bd);color:var(--t2);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.01);}
+.badge{display:inline-flex;align-items:center;gap:.18rem;padding:2px 6px;border-radius:4px;font-size:.6rem;font-weight:600;letter-spacing:.03em;}
+.badge-active,.badge-online{background:rgba(5,150,105,.1);color:var(--gr);}
+.badge-completed{background:rgba(37,99,235,.1);color:var(--ac);}
+.badge-cancelled,.badge-suspended,.badge-rejected{background:rgba(220,38,38,.1);color:var(--rd);}
+.badge-pending{background:rgba(217,119,6,.1);color:var(--am);}
+.badge-offline{background:rgba(82,96,112,.12);color:var(--mt);}
+.badge-busy{background:rgba(124,58,237,.12);color:var(--pu);}
+.badge-paid{background:rgba(5,150,105,.1);color:var(--gr);}
+.u-cell{display:flex;align-items:center;gap:.48rem;}
+.u-av{width:23px;height:23px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;flex-shrink:0;font-family:'Syne',sans-serif;color:#fff;}
+.act-btn{padding:.22rem .48rem;border-radius:4px;font-size:.66rem;font-family:'DM Sans',sans-serif;cursor:pointer;border:1px solid var(--bd);background:var(--sf2);color:var(--t2);transition:all .15s;margin-right:.18rem;font-weight:500;}
+.act-btn:hover{background:var(--sf3);color:var(--tx);}
+.act-btn.ok{color:var(--gr);border-color:rgba(5,150,105,.25);background:rgba(5,150,105,.06);}
+.act-btn.bad{color:var(--rd);border-color:rgba(220,38,38,.25);background:rgba(220,38,38,.06);}
+.act-btn.info{color:var(--ac);border-color:rgba(37,99,235,.25);background:rgba(37,99,235,.06);}
+/* FILTERS */
+.filter-row{display:flex;gap:.48rem;align-items:center;margin-bottom:.88rem;flex-wrap:wrap;}
+.search-inp{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);padding:.4rem .7rem;color:var(--tx);font-size:.77rem;font-family:'DM Sans',sans-serif;outline:none;flex:1;min-width:160px;transition:border-color .18s;}
+.search-inp:focus{border-color:var(--ac);}
+.filter-sel{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);padding:.4rem .7rem;color:var(--tx);font-size:.77rem;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;}
+.filter-sel option{background:var(--sf2);}
+.btn-sm{padding:.32rem .6rem;border-radius:var(--rs);font-size:.7rem;font-family:'DM Sans',sans-serif;cursor:pointer;border:1px solid var(--bd);background:var(--sf2);color:var(--t2);display:inline-flex;align-items:center;gap:.28rem;transition:all .15s;font-weight:500;}
+.btn-sm:hover{background:var(--sf3);}
+.btn-sm.primary{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600;}
+/* SETTINGS */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.s-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:.92rem;}
+.s-card-ttl{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;margin-bottom:.82rem;display:flex;align-items:center;gap:.38rem;}
+.s-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;}
+.s-lbl{font-size:.77rem;color:var(--t2);}
+.s-inp{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:.3rem .55rem;color:var(--tx);font-family:'DM Mono',monospace;font-size:.77rem;width:85px;outline:none;text-align:right;}
+.s-inp:focus{border-color:var(--ac);}
+.toggle{position:relative;width:32px;height:18px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.tgl{position:absolute;cursor:pointer;inset:0;background:var(--bd);border-radius:20px;transition:.22s;}
+.tgl::before{content:'';position:absolute;width:12px;height:12px;border-radius:50%;left:3px;top:3px;background:var(--mt);transition:.22s;}
+.toggle input:checked+.tgl{background:rgba(5,150,105,.3);}
+.toggle input:checked+.tgl::before{transform:translateX(14px);background:var(--gr);}
+.save-btn{margin-top:.78rem;padding:.42rem .85rem;background:var(--ac);border:none;border-radius:var(--rs);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;display:inline-flex;align-items:center;gap:.28rem;transition:opacity .15s;}
+.save-btn:hover{opacity:.88;}
+.bc-ta{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:.52rem .7rem;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:.77rem;outline:none;resize:none;height:68px;}
+.bc-ta:focus{border-color:var(--ac);}
+.rev-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.05rem;}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem;}
+.overlay.open{display:flex;}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:13px;padding:1.25rem;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;animation:mIn .2s ease;}
+@keyframes mIn{from{opacity:0;transform:scale(.97);}to{opacity:1;transform:scale(1);}}
+.modal-ttl{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;margin-bottom:.92rem;}
+.m-f{margin-bottom:.7rem;}
+.m-f label{display:block;font-size:.6rem;font-weight:600;color:var(--mt);margin-bottom:.26rem;text-transform:uppercase;letter-spacing:.08em;}
+.m-f input,.m-f select,.m-f textarea{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:.55rem .7rem;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:.78rem;outline:none;transition:border-color .18s;}
+.m-f input:focus,.m-f select:focus,.m-f textarea:focus{border-color:var(--ac);}
+.m-f select option{background:var(--sf2);}
+.m-btns{display:flex;gap:.48rem;margin-top:.82rem;}
+.m-cancel{flex:1;padding:.52rem;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);color:var(--t2);font-family:'DM Sans',sans-serif;cursor:pointer;font-size:.77rem;}
+.m-submit{flex:1;padding:.52rem;background:var(--ac);border:none;border-radius:var(--rs);color:#fff;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;font-size:.77rem;}
+.m-danger{flex:1;padding:.52rem;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);border-radius:var(--rs);color:var(--rd);font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;font-size:.77rem;}
+/* NOTIF PANEL */
+.np{position:fixed;top:0;right:-325px;bottom:0;width:308px;background:var(--sf);border-left:1px solid var(--bd);z-index:50;transition:right .26s ease;display:flex;flex-direction:column;}
+.np.open{right:0;}
+.np-head{padding:.82rem .95rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.np-ttl{font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;}
+.np-clr{font-size:.66rem;color:var(--mt);cursor:pointer;padding:.18rem .4rem;border-radius:4px;border:1px solid var(--bd);background:none;font-family:'DM Sans',sans-serif;}
+.np-list{flex:1;overflow-y:auto;padding:.42rem;}
+.np-item{display:flex;gap:.48rem;padding:.48rem;border-radius:6px;margin-bottom:.28rem;border:1px solid var(--bd);background:var(--sf2);}
+.np-item.unread{border-left:2px solid var(--ac);}
+.np-ico{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;background:var(--sf3);}
+.np-txt{font-size:.72rem;font-weight:500;line-height:1.4;color:var(--t2);}
+.np-tm{font-size:.6rem;color:var(--mt);margin-top:.1rem;}
+.np-empty{text-align:center;color:var(--mt);font-size:.77rem;padding:2rem;}
+/* TOAST */
+.toast{position:fixed;bottom:1.1rem;right:1.1rem;background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:.62rem .92rem;font-size:.77rem;z-index:500;animation:tIn .25s ease;box-shadow:0 8px 28px rgba(0,0,0,.45);display:flex;align-items:center;gap:.35rem;max-width:280px;}
+@keyframes tIn{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:2rem 1rem;color:var(--mt);font-size:.78rem;}
+@media(max-width:900px){.sidebar{width:46px;}.sb-item span,.sb-lbl,.sb-uname,.sb-urole,.sb-tag{display:none;}.main-area{margin-left:46px;}.stat-grid{grid-template-columns:repeat(2,1fr);}.map-layout{grid-template-columns:1fr;}.settings-grid{grid-template-columns:1fr;}}
+@media(max-width:600px){.sidebar{display:none;}.main-area{margin-left:0;}.stat-grid,.rev-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<!-- AUTH -->
+<div id="authWrap">
+  <div class="auth-box">
+    <div class="auth-logo">ZAP<span>Rides</span></div>
+    <div class="auth-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Admin Console
+    </div>
+    <div class="auth-card">
+      <label class="a-lbl">Email Address</label>
+      <input type="email" class="a-inp" id="aEmail" placeholder="admin@zaprides.app">
+      <label class="a-lbl">Password</label>
+      <input type="password" class="a-inp" id="aPw" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()" style="margin-bottom:.6rem">
+      <button class="a-btn" onclick="adminLogin()" id="loginBtn">Sign In to Dashboard</button>
+      <div class="a-err" id="aErr"></div>
+      <div class="a-link">No account? <a href="#" onclick="adminRegister()">Create admin account</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appWrap">
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">ZAP<span>Rides</span></div>
+      <div class="sb-tag">Operations Console</div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:.45rem 0">
+      <div class="sb-sec">
+        <div class="sb-lbl">Overview</div>
+        <div class="sb-item active" onclick="showPage('dashboard')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span>
+        </div>
+        <div class="sb-item" onclick="showPage('livemap')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
+          <span>Live Map</span>
+        </div>
+      </div>
+      <div class="sb-sec">
+        <div class="sb-lbl">Management</div>
+        <div class="sb-item" onclick="showPage('trips')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Trips</span>
+        </div>
+        <div class="sb-item" onclick="showPage('drivers')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+          <span>Drivers</span>
+          <span class="sb-cnt" id="pendingBadge">0</span>
+        </div>
+        <div class="sb-item" onclick="showPage('riders')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Riders</span>
+        </div>
+        <div class="sb-item" onclick="showPage('promos')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          <span>Promos</span>
+        </div>
+      </div>
+      <div class="sb-sec">
+        <div class="sb-lbl">Finance</div>
+        <div class="sb-item" onclick="showPage('revenue')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Revenue</span>
+        </div>
+        <div class="sb-item" onclick="showPage('settings')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+          <span>Settings</span>
+        </div>
+      </div>
+    </div>
+    <div class="sb-foot">
+      <div class="sb-usr">
+        <div class="sb-av" id="sbAv">A</div>
+        <div><div class="sb-uname" id="sbName">Admin</div><div class="sb-urole">Super Admin</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="np" id="npPanel">
+    <div class="np-head"><div class="np-ttl">Notifications <span id="npCnt" style="font-weight:400;font-size:.68rem;color:var(--mt)"></span></div><button class="np-clr" onclick="clearNotifs()">Clear all</button></div>
+    <div class="np-list" id="npList"><div class="np-empty">No notifications</div></div>
+  </div>
+
+  <div class="main-area">
+    <div class="topbar">
+      <div class="tb-title" id="pageTitle">Dashboard</div>
+      <div class="tb-right">
+        <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+        <button class="tb-btn" onclick="toggleNP()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="nb" id="nBadge">0</span>
+        </button>
+        <button class="tb-btn" onclick="adminLogout()" title="Sign out">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="dashboardPage">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="sc-top"><div class="sc-lbl">Active Trips</div><div class="sc-ico" style="background:rgba(5,150,105,.1)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="sc-val" id="statActive">0</div><div class="sc-sub">In progress right now</div></div>
+          <div class="stat-card"><div class="sc-top"><div class="sc-lbl">Online Drivers</div><div class="sc-ico" style="background:rgba(37,99,235,.1)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg></div></div><div class="sc-val" id="statDrivers">0</div><div class="sc-sub">Available &amp; on trip</div></div>
+          <div class="stat-card"><div class="sc-top"><div class="sc-lbl">Today Revenue</div><div class="sc-ico" style="background:rgba(217,119,6,.1)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--am)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="sc-val" id="statRevenue">K0</div><div class="sc-sub">Platform cut (20%)</div></div>
+          <div class="stat-card"><div class="sc-top"><div class="sc-lbl">Total Riders</div><div class="sc-ico" style="background:rgba(124,58,237,.1)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--pu)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div><div class="sc-val" id="statRiders">0</div><div class="sc-sub">Registered users</div></div>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-head"><div class="tbl-ttl">Pending Driver Approvals</div><span id="pendingLabel" style="font-size:.68rem;color:var(--am)"></span></div>
+          <table><thead><tr><th>Driver</th><th>Vehicle</th><th>Phone</th><th>Submitted</th><th>Actions</th></tr></thead><tbody id="pendingBody"></tbody></table>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-head"><div class="tbl-ttl">Recent Trips</div><button class="btn-sm" onclick="showPage('trips')">View All</button></div>
+          <table><thead><tr><th>ID</th><th>Rider</th><th>Driver</th><th>Route</th><th>Fare</th><th>Status</th><th>Time</th></tr></thead><tbody id="recentTripsBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- LIVE MAP -->
+      <div class="page" id="livemapPage">
+        <div class="map-layout">
+          <div id="adminMap"></div>
+          <div class="map-side">
+            <div class="map-side-ttl">Active Trips <span id="activeTripCount" style="color:var(--mt);font-weight:400;font-size:.7rem"></span></div>
+            <div id="liveTripsContainer"><div class="empty">No active trips</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRIPS -->
+      <div class="page" id="tripsPage">
+        <div class="filter-row">
+          <input class="search-inp" type="text" placeholder="Search trips..." id="tripSearch" oninput="filterTrips()">
+          <select class="filter-sel" id="tripStatusFilter" onchange="filterTrips()"><option value="">All Status</option><option value="searching">Searching</option><option value="accepted">Accepted</option><option value="intrip">In Trip</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select>
+          <button class="btn-sm primary" onclick="exportTripsCSV()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-head"><div class="tbl-ttl">All Trips</div><span id="tripCountLbl" style="font-size:.68rem;color:var(--mt)"></span></div>
+          <table><thead><tr><th>ID</th><th>Rider</th><th>Driver</th><th>From → To</th><th>Fare</th><th>Type</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="allTripsBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- DRIVERS -->
+      <div class="page" id="driversPage">
+        <div class="filter-row">
+          <input class="search-inp" type="text" placeholder="Search drivers..." id="driverSearch" oninput="filterDrivers()">
+          <select class="filter-sel" id="driverStatusFilter" onchange="filterDrivers()"><option value="">All Status</option><option value="online">Online</option><option value="busy">On Trip</option><option value="offline">Offline</option><option value="pending">Pending</option><option value="suspended">Suspended</option></select>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-head"><div class="tbl-ttl">All Drivers</div><span id="driverCountLbl" style="font-size:.68rem;color:var(--mt)"></span></div>
+          <table><thead><tr><th>Driver</th><th>Vehicle</th><th>Rating</th><th>Trips</th><th>Earnings</th><th>Status</th><th>Actions</th></tr></thead><tbody id="driversBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- RIDERS -->
+      <div class="page" id="ridersPage">
+        <div class="filter-row">
+          <input class="search-inp" type="text" placeholder="Search riders..." id="riderSearch" oninput="filterRiders()">
+          <button class="btn-sm primary" onclick="exportRidersCSV()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-head"><div class="tbl-ttl">All Riders</div><span id="riderCountLbl" style="font-size:.68rem;color:var(--mt)"></span></div>
+          <table><thead><tr><th>Rider</th><th>Email</th><th>Phone</th><th>Trips</th><th>Wallet</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="ridersBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- PROMOS -->
+      <div class="page" id="promosPage">
+        <div class="filter-row">
+          <input class="search-inp" type="text" placeholder="Search promo codes..." id="promoSearch" oninput="filterPromos()">
+          <button class="btn-sm primary" onclick="openMod('addPromoMod')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Promo</button>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-head"><div class="tbl-ttl">Promo Codes</div><span id="promoCountLbl" style="font-size:.68rem;color:var(--mt)"></span></div>
+          <table><thead><tr><th>Code</th><th>Discount</th><th>Type</th><th>Uses / Max</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead><tbody id="promosBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- REVENUE -->
+      <div class="page" id="revenuePage">
+        <div class="rev-grid">
+          <div class="stat-card"><div class="sc-top"><div class="sc-lbl">Today</div></div><div class="sc-val" id="revToday">K0</div></div>
+          <div class="stat-card"><div class="sc-top"><div class="sc-lbl">This Week</div></div><div class="sc-val" id="revWeek">K0</div></div>
+          <div class="stat-card"><div class="sc-top"><div class="sc-lbl">This Month</div></div><div class="sc-val" id="revMonth">K0</div></div>
+          <div class="stat-card"><div class="sc-top"><div class="sc-lbl">Platform Cut (20%)</div></div><div class="sc-val" id="revPlatform">K0</div></div>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-head"><div class="tbl-ttl">Driver Payouts</div><button class="btn-sm primary" onclick="processAllPayouts()">Process All Pending</button></div>
+          <table><thead><tr><th>Driver</th><th>Trips</th><th>Gross</th><th>Platform Fee</th><th>Net Payout</th><th>Status</th><th>Action</th></tr></thead><tbody id="payoutsBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="page" id="settingsPage">
+        <div class="settings-grid">
+          <div class="s-card">
+            <div class="s-card-ttl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--am)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Pricing Settings (ZMW)</div>
+            <div class="s-row"><div class="s-lbl">Base Fare (K)</div><input class="s-inp" type="number" id="sBase" step="1" placeholder="8"></div>
+            <div class="s-row"><div class="s-lbl">Per Km Rate (K)</div><input class="s-inp" type="number" id="sKm" step="0.5" placeholder="3.50"></div>
+            <div class="s-row"><div class="s-lbl">Per Min Rate (K)</div><input class="s-inp" type="number" id="sMin" step="0.5" placeholder="1.50"></div>
+            <div class="s-row"><div class="s-lbl">Platform Cut (%)</div><input class="s-inp" type="number" id="sCut" step="1" placeholder="20"></div>
+            <div class="s-row"><div class="s-lbl">Surge Multiplier</div><input class="s-inp" type="number" id="sSurge" step="0.1" placeholder="1.5"></div>
+            <button class="save-btn" onclick="savePricing()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Save &amp; Broadcast</button>
+          </div>
+          <div class="s-card">
+            <div class="s-card-ttl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Platform Controls</div>
+            <div class="s-row"><div class="s-lbl">Surge Pricing Active</div><label class="toggle"><input type="checkbox" id="togSurge" onchange="savePlatformSettings()"><div class="tgl"></div></label></div>
+            <div class="s-row"><div class="s-lbl">New Registrations Open</div><label class="toggle"><input type="checkbox" id="togReg" checked onchange="savePlatformSettings()"><div class="tgl"></div></label></div>
+            <div class="s-row"><div class="s-lbl">Maintenance Mode</div><label class="toggle"><input type="checkbox" id="togMaint" onchange="savePlatformSettings()"><div class="tgl"></div></label></div>
+            <div class="s-row"><div class="s-lbl">Auto-Approve Drivers</div><label class="toggle"><input type="checkbox" id="togAutoApprove" onchange="savePlatformSettings()"><div class="tgl"></div></label></div>
+            <div class="s-row"><div class="s-lbl">Driver Rating System</div><label class="toggle"><input type="checkbox" id="togRating" checked onchange="savePlatformSettings()"><div class="tgl"></div></label></div>
+          </div>
+          <div class="s-card">
+            <div class="s-card-ttl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--pu)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Broadcast Message</div>
+            <div class="m-f" style="margin-bottom:.7rem"><label>Target</label>
+              <select id="broadcastTarget" style="width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:.48rem .65rem;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:.77rem;outline:none;">
+                <option value="all">All Users</option><option value="riders">All Riders</option><option value="drivers">All Drivers</option>
+              </select>
+            </div>
+            <div class="m-f" style="margin-bottom:.7rem"><label>Message</label><textarea class="bc-ta" id="broadcastMsg" placeholder="Enter message to broadcast..."></textarea></div>
+            <button class="save-btn" onclick="sendBroadcast()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Send Broadcast</button>
+          </div>
+          <div class="s-card">
+            <div class="s-card-ttl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--rd)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Admin Security</div>
+            <div class="s-row"><div class="s-lbl">Admin Email</div><div style="font-size:.74rem;color:var(--mt)" id="adminEmailLbl">—</div></div>
+            <div class="m-f" style="margin-top:.6rem"><label>New Password</label><input type="password" id="newAdminPw" placeholder="Enter new password" style="width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:.52rem .68rem;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:.77rem;outline:none;"></div>
+            <button class="save-btn" onclick="changeAdminPassword()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Update Password</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="driverMod"><div class="modal"><div class="modal-ttl" id="driverModTtl">Driver Details</div><div id="driverModContent"></div><div class="m-btns" id="driverModBtns"></div></div></div>
+<div class="overlay" id="tripMod"><div class="modal"><div class="modal-ttl">Trip Details</div><div id="tripModContent"></div><div class="m-btns"><button class="m-cancel" onclick="closeMod('tripMod')">Close</button><button class="m-danger" id="cancelTripBtn" style="display:none">Cancel Trip</button></div></div></div>
+<div class="overlay" id="addPromoMod">
+  <div class="modal">
+    <div class="modal-ttl">New Promo Code</div>
+    <div class="m-f"><label>Code *</label><input type="text" id="npCode" placeholder="e.g. ZAPFIRST" style="text-transform:uppercase"></div>
+    <div class="m-f"><label>Discount Value *</label><input type="number" id="npDisc" placeholder="e.g. 50"></div>
+    <div class="m-f"><label>Type</label><select id="npType"><option value="pct">Percentage (%)</option><option value="fixed">Fixed Amount (K)</option></select></div>
+    <div class="m-f"><label>Max Uses</label><input type="number" id="npMax" placeholder="100"></div>
+    <div class="m-f"><label>Expiry Date</label><input type="date" id="npExpiry"></div>
+    <div class="m-btns"><button class="m-cancel" onclick="closeMod('addPromoMod')">Cancel</button><button class="m-submit" onclick="addPromo()">Create Promo</button></div>
+  </div>
+</div>
+<div class="overlay" id="editPromoMod">
+  <div class="modal">
+    <div class="modal-ttl">Edit Promo Code</div>
+    <div class="m-f"><label>Code</label><input type="text" id="epCode" readonly style="opacity:.5"></div>
+    <div class="m-f"><label>Discount Value</label><input type="number" id="epDisc"></div>
+    <div class="m-f"><label>Type</label><select id="epType"><option value="pct">Percentage (%)</option><option value="fixed">Fixed (K)</option></select></div>
+    <div class="m-f"><label>Max Uses</label><input type="number" id="epMax"></div>
+    <div class="m-f"><label>Expiry Date</label><input type="date" id="epExpiry"></div>
+    <div class="m-f"><label>Status</label><select id="epStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+    <div class="m-btns"><button class="m-cancel" onclick="closeMod('editPromoMod')">Cancel</button><button class="m-submit" onclick="saveEditPromo()">Save Changes</button></div>
+  </div>
+</div>
+
+<script>
+const FB={apiKey:"AIzaSyCjAwUB4chgwLwdOGpF5EY7T1Sof_1ZJsI",authDomain:"zap-ride.firebaseapp.com",databaseURL:"https://zap-ride-default-rtdb.firebaseio.com",projectId:"zap-ride",storageBucket:"zap-ride.firebasestorage.app",messagingSenderId:"304024002065",appId:"1:304024002065:web:efa03929d0b6fc26e99bb0"};
+const GMAPS_KEY="YOUR_GOOGLE_MAPS_API_KEY";
+firebase.initializeApp(FB);
+const auth=firebase.auth(),db=firebase.database();
+let adminUser=null,allDrivers={},allRiders={},allTrips={},allPromos={};
+let notifs=[],notifCount=0,editPromoCode=null,adminMap=null,drvMarkers={};
+const AVC=['#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2','#db2777','#65a30d'];
+const zmw=v=>'K'+parseFloat(v||0).toFixed(2);
+function avc(i){return AVC[i%AVC.length];}
+
+async function adminLogin(){
+  const e=document.getElementById('aEmail').value.trim(),p=document.getElementById('aPw').value.trim();
+  if(!e||!p){showAErr('Fill in all fields');return;}
+  const btn=document.getElementById('loginBtn');btn.innerHTML='<div class="spin"></div> Signing in...';btn.disabled=true;
+  try{const c=await auth.signInWithEmailAndPassword(e,p);const s=await db.ref('admins/'+c.user.uid).once('value');if(!s.val()){await auth.signOut();showAErr('Access denied.');btn.innerHTML='Sign In to Dashboard';btn.disabled=false;return;}startApp(c.user);}
+  catch(er){showAErr(er.message.replace('Firebase: ',''));btn.innerHTML='Sign In to Dashboard';btn.disabled=false;}
+}
+async function adminRegister(){
+  const e=document.getElementById('aEmail').value.trim(),p=document.getElementById('aPw').value.trim();
+  if(!e||!p||p.length<6){showAErr('Enter valid email and password (6+ chars)');return;}
+  try{const c=await auth.createUserWithEmailAndPassword(e,p);await db.ref('admins/'+c.user.uid).set(true);startApp(c.user);toast('Admin account created!','✅');}
+  catch(er){showAErr(er.message.replace('Firebase: ',''));}
+}
+function showAErr(m){const e=document.getElementById('aErr');e.textContent=m;e.style.display='block';}
+function adminLogout(){if(!confirm('Sign out?'))return;auth.signOut();location.reload();}
+auth.onAuthStateChanged(async u=>{if(u){const s=await db.ref('admins/'+u.uid).once('value');if(s.val())startApp(u);}});
+
+function startApp(user){
+  adminUser=user;
+  document.getElementById('authWrap').style.display='none';
+  document.getElementById('appWrap').style.display='block';
+  const n=user.email?.split('@')[0]||'Admin';
+  document.getElementById('sbName').textContent=n;
+  document.getElementById('sbAv').textContent=n[0].toUpperCase();
+  document.getElementById('adminEmailLbl').textContent=user.email||'—';
+  loadPricingSettings();loadPlatformSettings();initListeners();
+  if(GMAPS_KEY!=='YOUR_GOOGLE_MAPS_API_KEY'){const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&callback=initAdminMap`;s.async=true;document.head.appendChild(s);}
+}
+window.initAdminMap=function(){
+  adminMap=new google.maps.Map(document.getElementById('adminMap'),{center:{lat:-15.4167,lng:28.2833},zoom:12,styles:[{elementType:'geometry',stylers:[{color:'#0e1117'}]},{elementType:'labels.text.fill',stylers:[{color:'#526070'}]},{featureType:'road',elementType:'geometry',stylers:[{color:'#1c2530'}]},{featureType:'water',elementType:'geometry',stylers:[{color:'#07090e'}]},{featureType:'poi',stylers:[{visibility:'off'}]}]});
+  updateDrvMarkers();
+};
+function updateDrvMarkers(){
+  if(!adminMap)return;
+  Object.entries(allDrivers).forEach(([uid,d])=>{
+    if(!d.location?.lat)return;
+    const pos={lat:parseFloat(d.location.lat),lng:parseFloat(d.location.lng)};
+    const col=d.status==='online'?'#059669':d.status==='busy'?'#2563eb':'#526070';
+    const icon={path:google.maps.SymbolPath.CIRCLE,scale:7,fillColor:col,fillOpacity:1,strokeColor:'#fff',strokeWeight:1.5};
+    if(drvMarkers[uid]){drvMarkers[uid].setPosition(pos);drvMarkers[uid].setIcon(icon);}
+    else{drvMarkers[uid]=new google.maps.Marker({position:pos,map:adminMap,title:d.name,icon});drvMarkers[uid].addListener('click',()=>toast(d.name+' · '+d.status,'🚗'));}
+  });
+}
+function initListeners(){
+  db.ref('drivers').on('value',s=>{allDrivers=s.val()||{};renderDashStats();renderPending();renderDriversTable();renderPayoutsTable();updateDrvMarkers();updatePendingBadge();});
+  db.ref('riders').on('value',s=>{allRiders=s.val()||{};renderDashStats();renderRidersTable();});
+  db.ref('trips').on('value',s=>{allTrips=s.val()||{};renderDashStats();renderRecentTrips();renderAllTrips();renderLiveTrips();renderRevenueStats();});
+  db.ref('promos').on('value',s=>{allPromos=s.val()||{};renderPromosTable();});
+  db.ref('reports').orderByChild('ts').limitToLast(1).on('child_added',s=>{const r=s.val();if(r&&r.ts>Date.now()-60000)pushNotif({type:'report',text:'⚠️ Report: '+(r.issue||'issue reported')});});
+}
+function renderDashStats(){
+  const trips=Object.values(allTrips);
+  const active=trips.filter(t=>['searching','accepted','enroute','arrived','intrip'].includes(t.status)).length;
+  const online=Object.values(allDrivers).filter(d=>d.status==='online'||d.status==='busy').length;
+  const dayStart=new Date();dayStart.setHours(0,0,0,0);
+  const rev=trips.filter(t=>t.status==='completed'&&t.completedAt>=dayStart.getTime()).reduce((s,t)=>s+parseFloat(t.fare||0)*0.2,0);
+  document.getElementById('statActive').textContent=active;
+  document.getElementById('statDrivers').textContent=online;
+  document.getElementById('statRevenue').textContent=zmw(rev);
+  document.getElementById('statRiders').textContent=Object.keys(allRiders).length;
+}
+function updatePendingBadge(){
+  const n=Object.values(allDrivers).filter(d=>d.status==='pending').length;
+  const b=document.getElementById('pendingBadge');b.textContent=n;b.classList.toggle('show',n>0);
+  document.getElementById('pendingLabel').textContent=n+' awaiting approval';
+}
+function renderPending(){
+  const p=Object.entries(allDrivers).filter(([,d])=>d.status==='pending');
+  const tb=document.getElementById('pendingBody');
+  if(!p.length){tb.innerHTML='<tr><td colspan="5" class="empty">No pending approvals ✓</td></tr>';return;}
+  tb.innerHTML=p.map(([uid,d])=>`<tr><td><div class="u-cell"><div class="u-av" style="background:${avc(0)}">${(d.name||'?')[0]}</div><div><div style="font-weight:600">${d.name||'—'}</div><div style="font-size:.66rem;color:var(--mt)">${d.email||''}</div></div></div></td><td>${d.vehicle||'—'} · ${d.plate||'—'}</td><td>${d.phone||'—'}</td><td>${d.created?new Date(d.created).toLocaleDateString():'—'}</td><td><button class="act-btn ok" onclick="approveDriver('${uid}')">Approve</button><button class="act-btn bad" onclick="rejectDriver('${uid}')">Reject</button><button class="act-btn info" onclick="viewDriver('${uid}')">View</button></td></tr>`).join('');
+}
+async function approveDriver(uid){
+  await db.ref('drivers/'+uid).update({status:'offline',approved:true,approvedAt:Date.now()});
+  await db.ref('notifications/'+uid).push({type:'approval',msg:'Your account has been approved! You can now go online and accept rides.',ts:Date.now(),read:false});
+  toast('Driver approved','✅');pushNotif({type:'driver',text:'Approved: '+(allDrivers[uid]?.name||uid)});
+}
+async function rejectDriver(uid){
+  if(!confirm('Reject '+(allDrivers[uid]?.name||uid)+'?'))return;
+  await db.ref('drivers/'+uid).update({status:'rejected',approved:false});
+  await db.ref('notifications/'+uid).push({type:'rejection',msg:'Your driver application was not approved. Please contact support.',ts:Date.now(),read:false});
+  toast('Driver rejected','❌');
+}
+async function suspendDriver(uid){
+  if(!confirm('Suspend '+(allDrivers[uid]?.name||uid)+'?'))return;
+  await db.ref('drivers/'+uid+'/status').set('suspended');
+  await db.ref('notifications/'+uid).push({type:'suspension',msg:'Your account has been suspended. Please contact support.',ts:Date.now(),read:false});
+  toast((allDrivers[uid]?.name||uid)+' suspended','🚫');
+}
+async function reinstateDriver(uid){
+  await db.ref('drivers/'+uid+'/status').set('offline');
+  await db.ref('notifications/'+uid).push({type:'reinstate',msg:'Your account has been reinstated. You can now go online.',ts:Date.now(),read:false});
+  toast((allDrivers[uid]?.name||uid)+' reinstated','✅');
+}
+function viewDriver(uid){
+  const d=allDrivers[uid]||{};
+  document.getElementById('driverModTtl').textContent=d.name||'Driver';
+  document.getElementById('driverModContent').innerHTML='<div style="display:grid;gap:.4rem;font-size:.78rem;margin-bottom:.75rem">'+[['Email',d.email||'—'],['Phone',d.phone||'—'],['Vehicle',d.vehicle||'—'],['Plate',`<span style="font-family:'DM Mono',monospace">${d.plate||'—'}</span>`],['Type',d.type||'—'],['Rating','★ '+(d.rating||'5.00')],['Trips',d.trips||0],['Earnings',`<span style="color:var(--gr)">${zmw(d.earnings||0)}</span>`],['Status',`<span class="badge badge-${d.status||'offline'}">${d.status||'offline'}</span>`]].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:.28rem 0;border-bottom:1px solid var(--bd)"><span style="color:var(--mt)">${l}</span><span>${v}</span></div>`).join('')+'</div>';
+  const b=document.getElementById('driverModBtns');
+  b.innerHTML=`<button class="m-cancel" onclick="closeMod('driverMod')">Close</button>`;
+  if(d.status==='pending')b.innerHTML+=`<button class="m-submit" onclick="approveDriver('${uid}');closeMod('driverMod')">Approve</button>`;
+  if(d.status!=='suspended'&&d.status!=='pending')b.innerHTML+=`<button class="m-danger" onclick="suspendDriver('${uid}');closeMod('driverMod')">Suspend</button>`;
+  if(d.status==='suspended')b.innerHTML+=`<button class="m-submit" onclick="reinstateDriver('${uid}');closeMod('driverMod')">Reinstate</button>`;
+  openMod('driverMod');
+}
+function renderDriversTable(){
+  const sq=(document.getElementById('driverSearch')?.value||'').toLowerCase();
+  const sf=document.getElementById('driverStatusFilter')?.value||'';
+  let e=Object.entries(allDrivers).filter(([,d])=>(!sf||d.status===sf)&&(!sq||(d.name||'').toLowerCase().includes(sq)||(d.vehicle||'').toLowerCase().includes(sq)||(d.plate||'').toLowerCase().includes(sq)));
+  document.getElementById('driverCountLbl').textContent=e.length+' drivers';
+  const tb=document.getElementById('driversBody');
+  if(!e.length){tb.innerHTML='<tr><td colspan="7" class="empty">No drivers found</td></tr>';return;}
+  tb.innerHTML=e.map(([uid,d],i)=>`<tr><td><div class="u-cell"><div class="u-av" style="background:${avc(i)}">${(d.name||'?')[0]}</div><div><div style="font-weight:600">${d.name||'—'}</div><div style="font-size:.66rem;color:var(--mt)">${d.email||''}</div></div></div></td><td>${d.vehicle||'—'}<br><span style="font-size:.66rem;color:var(--mt)">${d.plate||''} · ${d.type||''}</span></td><td>★ ${d.rating||'5.00'}</td><td style="font-family:'DM Mono',monospace">${d.trips||0}</td><td style="color:var(--gr);font-family:'DM Mono',monospace">${zmw(d.earnings||0)}</td><td><span class="badge badge-${d.status||'offline'}">${d.status||'offline'}</span></td><td>${d.status==='pending'?`<button class="act-btn ok" onclick="approveDriver('${uid}')">Approve</button>`:''
+}${d.status!=='suspended'&&d.status!=='pending'?`<button class="act-btn bad" onclick="suspendDriver('${uid}')">Suspend</button>`:''
+}${d.status==='suspended'?`<button class="act-btn ok" onclick="reinstateDriver('${uid}')">Reinstate</button>`:''
+}<button class="act-btn info" onclick="viewDriver('${uid}')">View</button></td></tr>`).join('');
+}
+function filterDrivers(){renderDriversTable();}
+function renderRecentTrips(){
+  const trips=Object.entries(allTrips).sort(([,a],[,b])=>(b.createdAt||0)-(a.createdAt||0)).slice(0,8);
+  const tb=document.getElementById('recentTripsBody');
+  if(!trips.length){tb.innerHTML='<tr><td colspan="7" class="empty">No trips yet</td></tr>';return;}
+  tb.innerHTML=trips.map(([id,t],i)=>`<tr><td><span style="font-family:'DM Mono',monospace;font-size:.68rem">${id.slice(-6)}</span></td><td><div class="u-cell"><div class="u-av" style="background:${avc(i)}">${(t.riderName||'?')[0]}</div>${t.riderName||'—'}</div></td><td>${t.driverName||'—'}</td><td style="font-size:.7rem;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.pickupAddress||'—'} → ${t.dropoffAddress||'—'}</td><td style="font-family:'DM Mono',monospace;color:var(--gr)">${zmw(t.fare||0)}</td><td><span class="badge badge-${t.status||'searching'}">${t.status||'searching'}</span></td><td style="font-size:.68rem">${t.createdAt?new Date(t.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'—'}</td></tr>`).join('');
+}
+function renderAllTrips(){
+  const sq=(document.getElementById('tripSearch')?.value||'').toLowerCase();
+  const sf=document.getElementById('tripStatusFilter')?.value||'';
+  let e=Object.entries(allTrips).sort(([,a],[,b])=>(b.createdAt||0)-(a.createdAt||0)).filter(([id,t])=>(!sf||t.status===sf)&&(!sq||(t.riderName||'').toLowerCase().includes(sq)||(t.driverName||'').toLowerCase().includes(sq)||id.includes(sq)));
+  document.getElementById('tripCountLbl').textContent=e.length+' trips';
+  const tb=document.getElementById('allTripsBody');
+  if(!e.length){tb.innerHTML='<tr><td colspan="9" class="empty">No trips found</td></tr>';return;}
+  tb.innerHTML=e.map(([id,t],i)=>`<tr><td><span style="font-family:'DM Mono',monospace;font-size:.66rem">${id.slice(-6)}</span></td><td>${t.riderName||'—'}</td><td>${t.driverName||'—'}</td><td style="font-size:.7rem;max-width:115px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.pickupAddress||'—'} → ${t.dropoffAddress||'—'}</td><td style="font-family:'DM Mono',monospace">${zmw(t.fare||0)}</td><td>${t.rideType||'—'}</td><td><span class="badge badge-${t.status||'searching'}">${t.status||'—'}</span></td><td style="font-size:.68rem">${t.createdAt?new Date(t.createdAt).toLocaleDateString():'—'}</td><td><button class="act-btn info" onclick="viewTrip('${id}')">View</button>${['searching','accepted','enroute','arrived','intrip'].includes(t.status)?`<button class="act-btn bad" onclick="adminCancelTrip('${id}')">Cancel</button>`:''}</td></tr>`).join('');
+}
+function filterTrips(){renderAllTrips();}
+function viewTrip(id){
+  const t=allTrips[id]||{};
+  document.getElementById('tripModContent').innerHTML='<div style="display:grid;gap:.38rem;font-size:.78rem">'+[['Trip ID',`<span style="font-family:'DM Mono',monospace;font-size:.68rem">${id}</span>`],['Rider',t.riderName||'—'],['Driver',t.driverName||'Searching...'],['Pickup',t.pickupAddress||'—'],['Dropoff',t.dropoffAddress||'—'],['Fare',`<span style="color:var(--gr);font-weight:600">${zmw(t.fare||0)}</span>`],['Type',t.rideType||'—'],['Status',`<span class="badge badge-${t.status||'searching'}">${t.status||'—'}</span>`],['Date',t.createdAt?new Date(t.createdAt).toLocaleString():'—']].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:.26rem 0;border-bottom:1px solid var(--bd)"><span style="color:var(--mt)">${l}</span><span>${v}</span></div>`).join('')+'</div>';
+  const cb=document.getElementById('cancelTripBtn');
+  if(['searching','accepted','enroute','arrived','intrip'].includes(t.status)){cb.style.display='block';cb.onclick=()=>{adminCancelTrip(id);closeMod('tripMod');};}else cb.style.display='none';
+  openMod('tripMod');
+}
+async function adminCancelTrip(id){
+  if(!confirm('Cancel trip '+id+'?'))return;
+  await db.ref('trips/'+id).update({status:'cancelled',cancelledAt:Date.now()});
+  const t=allTrips[id];
+  if(t?.riderId)await db.ref('notifications/'+t.riderId).push({type:'trip',msg:'Your trip was cancelled by admin.',ts:Date.now(),read:false});
+  if(t?.driverId)await db.ref('notifications/'+t.driverId).push({type:'trip',msg:'A trip was cancelled by admin.',ts:Date.now(),read:false});
+  toast('Trip cancelled','🚫');
+}
+function renderLiveTrips(){
+  const active=Object.entries(allTrips).filter(([,t])=>['accepted','enroute','arrived','intrip'].includes(t.status));
+  document.getElementById('activeTripCount').textContent='('+active.length+')';
+  const c=document.getElementById('liveTripsContainer');
+  if(!active.length){c.innerHTML='<div class="empty">No active trips</div>';return;}
+  c.innerHTML=active.map(([id,t])=>`<div class="ltc" onclick="viewTrip('${id}')"><div class="ltc-id">${id.slice(-6)}</div><div class="ltc-route">${(t.pickupAddress||'Pickup').split(',')[0]} → ${(t.dropoffAddress||'Dropoff').split(',')[0]}</div><div class="ltc-meta">${t.driverName||'—'} · ${zmw(t.fare||0)} · <span class="badge badge-${t.status}" style="font-size:.56rem">${t.status}</span></div></div>`).join('');
+}
+function renderRidersTable(){
+  const sq=(document.getElementById('riderSearch')?.value||'').toLowerCase();
+  let e=Object.entries(allRiders).filter(([,r])=>!sq||(r.name||'').toLowerCase().includes(sq)||(r.email||'').toLowerCase().includes(sq));
+  document.getElementById('riderCountLbl').textContent=e.length+' riders';
+  const trips=Object.values(allTrips);
+  const tb=document.getElementById('ridersBody');
+  if(!e.length){tb.innerHTML='<tr><td colspan="7" class="empty">No riders yet</td></tr>';return;}
+  tb.innerHTML=e.map(([uid,r],i)=>{const done=trips.filter(t=>t.riderId===uid&&t.status==='completed');const spent=done.reduce((s,t)=>s+parseFloat(t.fare||0),0);return`<tr><td><div class="u-cell"><div class="u-av" style="background:${avc(i)}">${(r.name||'?')[0]}</div><span style="font-weight:600">${r.name||'—'}</span></div></td><td>${r.email||'—'}</td><td>${r.phone||'—'}</td><td style="font-family:'DM Mono',monospace">${done.length}</td><td style="color:var(--gr);font-family:'DM Mono',monospace">${zmw(spent)}</td><td style="font-size:.68rem">${r.created?new Date(r.created).toLocaleDateString():'—'}</td><td><button class="act-btn bad" onclick="suspendRider('${uid}','${r.name||uid}')">Suspend</button></td></tr>`}).join('');
+}
+function filterRiders(){renderRidersTable();}
+async function suspendRider(uid,name){if(!confirm('Suspend '+name+'?'))return;await db.ref('riders/'+uid+'/suspended').set(true);await db.ref('notifications/'+uid).push({type:'suspension',msg:'Your account has been suspended.',ts:Date.now(),read:false});toast(name+' suspended','🚫');}
+function renderPromosTable(){
+  const sq=(document.getElementById('promoSearch')?.value||'').toLowerCase();
+  let e=Object.entries(allPromos).filter(([code])=>!sq||code.toLowerCase().includes(sq));
+  document.getElementById('promoCountLbl').textContent=e.length+' codes';
+  const tb=document.getElementById('promosBody');
+  if(!e.length){tb.innerHTML='<tr><td colspan="7" class="empty">No promo codes</td></tr>';return;}
+  tb.innerHTML=e.map(([code,p])=>`<tr><td><span style="font-family:'DM Mono',monospace;font-weight:600">${code}</span></td><td style="color:var(--gr);font-weight:600">${p.discount}</td><td>${p.type}</td><td style="font-family:'DM Mono',monospace">${p.uses||0} / ${p.max||'∞'}</td><td style="font-size:.7rem">${p.expiry||'—'}</td><td><span class="badge ${p.status==='active'?'badge-active':'badge-cancelled'}">${p.status||'inactive'}</span></td><td><button class="act-btn info" onclick="editPromo('${code}')">Edit</button><button class="act-btn bad" onclick="deletePromo('${code}')">Delete</button></td></tr>`).join('');
+}
+function filterPromos(){renderPromosTable();}
+async function addPromo(){
+  const code=document.getElementById('npCode').value.trim().toUpperCase();const disc=parseFloat(document.getElementById('npDisc').value);const type=document.getElementById('npType').value;
+  if(!code||!disc){toast('Enter code and discount','⚠️');return;}
+  const display=type==='pct'?disc+'%':'K'+disc.toFixed(2);
+  await db.ref('promos/'+code).set({discount:display,type:type==='pct'?'Percentage':'Fixed',uses:0,max:parseInt(document.getElementById('npMax').value)||100,expiry:document.getElementById('npExpiry').value||'2026-12-31',status:'active',created:Date.now()});
+  closeMod('addPromoMod');['npCode','npDisc','npMax','npExpiry'].forEach(id=>document.getElementById(id).value='');
+  toast('Promo code created: '+code,'🎁');
+}
+function editPromo(code){
+  const p=allPromos[code];if(!p)return;editPromoCode=code;
+  document.getElementById('epCode').value=code;document.getElementById('epDisc').value=parseFloat(p.discount?.replace(/[%K]/g,'')||0);
+  document.getElementById('epType').value=p.type==='Percentage'?'pct':'fixed';document.getElementById('epMax').value=p.max||100;document.getElementById('epExpiry').value=p.expiry||'';document.getElementById('epStatus').value=p.status||'active';
+  openMod('editPromoMod');
+}
+async function saveEditPromo(){
+  if(!editPromoCode)return;const disc=parseFloat(document.getElementById('epDisc').value);const type=document.getElementById('epType').value;
+  await db.ref('promos/'+editPromoCode).update({discount:type==='pct'?disc+'%':'K'+disc.toFixed(2),type:type==='pct'?'Percentage':'Fixed',max:parseInt(document.getElementById('epMax').value)||100,expiry:document.getElementById('epExpiry').value,status:document.getElementById('epStatus').value});
+  closeMod('editPromoMod');toast('Promo '+editPromoCode+' updated','✏️');
+}
+async function deletePromo(code){if(!confirm('Delete '+code+'?'))return;await db.ref('promos/'+code).remove();toast('Promo '+code+' deleted','🗑️');}
+function renderRevenueStats(){
+  const trips=Object.values(allTrips).filter(t=>t.status==='completed');
+  const now=new Date();const ds=new Date(now);ds.setHours(0,0,0,0);const ws=new Date(now);ws.setDate(ws.getDate()-7);ws.setHours(0,0,0,0);const ms=new Date(now.getFullYear(),now.getMonth(),1);
+  const tot=f=>trips.filter(f).reduce((s,t)=>s+parseFloat(t.fare||0),0);
+  const tod=tot(t=>t.completedAt>=ds.getTime()),wk=tot(t=>t.completedAt>=ws.getTime()),mo=tot(t=>t.completedAt>=ms.getTime());
+  const cut=parseFloat(document.getElementById('sCut')?.value||20)/100;
+  document.getElementById('revToday').textContent=zmw(tod);document.getElementById('revWeek').textContent=zmw(wk);document.getElementById('revMonth').textContent=zmw(mo);document.getElementById('revPlatform').textContent=zmw(mo*cut);
+  renderPayoutsTable();
+}
+function renderPayoutsTable(){
+  const drivers=Object.entries(allDrivers).filter(([,d])=>d.earnings>0);
+  const tb=document.getElementById('payoutsBody');
+  if(!drivers.length){tb.innerHTML='<tr><td colspan="7" class="empty">No driver earnings yet</td></tr>';return;}
+  const cut=parseFloat(document.getElementById('sCut')?.value||20)/100;
+  tb.innerHTML=drivers.map(([uid,d])=>{const g=d.earnings||0,fee=g*cut,net=g-fee;return`<tr><td style="font-weight:600">${d.name||'—'}</td><td style="font-family:'DM Mono',monospace">${d.trips||0}</td><td style="font-family:'DM Mono',monospace">${zmw(g)}</td><td style="color:var(--rd);font-family:'DM Mono',monospace">-${zmw(fee)}</td><td style="color:var(--gr);font-weight:600;font-family:'DM Mono',monospace">${zmw(net)}</td><td><span class="badge ${d.paid?'badge-paid':'badge-pending'}">${d.paid?'Paid':'Pending'}</span></td><td><button class="act-btn ${d.paid?'':'ok'}" ${d.paid?'disabled':''} onclick="payDriver('${uid}','${d.name}',${net.toFixed(2)})">${d.paid?'Paid':'Pay Now'}</button></td></tr>`}).join('');
+}
+async function payDriver(uid,name,amount){
+  await db.ref('drivers/'+uid+'/paid').set(true);
+  await db.ref('payouts').push({driverId:uid,driverName:name,amount,ts:Date.now(),status:'processing'});
+  await db.ref('notifications/'+uid).push({type:'payout',msg:`Your payout of ${zmw(amount)} has been processed and sent to your account.`,ts:Date.now(),read:false});
+  toast(zmw(amount)+' sent to '+name,'💸');pushNotif({type:'payout',text:'Payout '+zmw(amount)+' sent to '+name});
+}
+async function processAllPayouts(){
+  const cut=parseFloat(document.getElementById('sCut')?.value||20)/100;let count=0;
+  for(const[uid,d]of Object.entries(allDrivers)){if(!d.paid&&d.earnings>0){await payDriver(uid,d.name,d.earnings*(1-cut));count++;}}
+  if(!count)toast('All payouts already processed','✅');else toast('Processed '+count+' payouts','💰');
+}
+async function loadPricingSettings(){const s=await db.ref('config/pricing').once('value');const p=s.val()||{};if(p.baseFare)document.getElementById('sBase').value=p.baseFare;if(p.perKm)document.getElementById('sKm').value=p.perKm;if(p.perMin)document.getElementById('sMin').value=p.perMin;if(p.platformCut)document.getElementById('sCut').value=p.platformCut;if(p.surge)document.getElementById('sSurge').value=p.surge;}
+async function savePricing(){
+  const cfg={baseFare:parseFloat(document.getElementById('sBase').value)||8,perKm:parseFloat(document.getElementById('sKm').value)||3.5,perMin:parseFloat(document.getElementById('sMin').value)||1.5,platformCut:parseFloat(document.getElementById('sCut').value)||20,surge:parseFloat(document.getElementById('sSurge').value)||1.5,surgeActive:document.getElementById('togSurge').checked,currency:'ZMW',updatedAt:Date.now()};
+  await db.ref('config/pricing').set(cfg);toast('Pricing saved and broadcast!','✅');
+}
+async function loadPlatformSettings(){const s=await db.ref('config/platform').once('value');const p=s.val()||{};['surgeActive','registrations','maintenance','autoApprove','rating'].forEach((k,i)=>{const ids=['togSurge','togReg','togMaint','togAutoApprove','togRating'];if(p[k]!==undefined)document.getElementById(ids[i]).checked=p[k];});}
+async function savePlatformSettings(){await db.ref('config/platform').set({surgeActive:document.getElementById('togSurge').checked,registrations:document.getElementById('togReg').checked,maintenance:document.getElementById('togMaint').checked,autoApprove:document.getElementById('togAutoApprove').checked,rating:document.getElementById('togRating').checked,updatedAt:Date.now()});toast('Platform settings saved','✅');}
+async function sendBroadcast(){const msg=document.getElementById('broadcastMsg').value.trim();const target=document.getElementById('broadcastTarget').value;if(!msg){toast('Enter a message','⚠️');return;}await db.ref('broadcasts').push({msg,target,ts:Date.now(),sentBy:adminUser.uid});document.getElementById('broadcastMsg').value='';pushNotif({type:'broadcast',text:'Broadcast to '+target+': "'+msg.slice(0,40)+'"'});toast('Broadcast sent to '+target,'📢');}
+async function changeAdminPassword(){const pw=document.getElementById('newAdminPw').value;if(!pw||pw.length<6){toast('Password must be 6+ characters','⚠️');return;}try{await auth.currentUser.updatePassword(pw);toast('Password updated','🔒');document.getElementById('newAdminPw').value='';}catch(e){toast(e.message,'❌');}}
+function exportTripsCSV(){const rows=[['ID','Rider','Driver','Pickup','Dropoff','Fare (ZMW)','Type','Status','Date']];Object.entries(allTrips).forEach(([id,t])=>rows.push([id,t.riderName||'',t.driverName||'',t.pickupAddress||'',t.dropoffAddress||'',t.fare||0,t.rideType||'',t.status||'',t.createdAt?new Date(t.createdAt).toLocaleString():'']));dlCSV(rows,'zap_trips_'+new Date().toISOString().split('T')[0]+'.csv');toast('Trips exported','📥');}
+function exportRidersCSV(){const rows=[['UID','Name','Email','Phone','Wallet (ZMW)','Joined']];Object.entries(allRiders).forEach(([uid,r])=>rows.push([uid,r.name||'',r.email||'',r.phone||'',r.wallet||0,r.created?new Date(r.created).toLocaleDateString():'']));dlCSV(rows,'zap_riders_'+new Date().toISOString().split('T')[0]+'.csv');toast('Riders exported','📥');}
+function dlCSV(rows,fn){const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=fn;a.click();}
+function pushNotif(n){notifs.unshift({...n,id:Date.now(),ts:Date.now(),read:false});if(notifs.length>50)notifs.pop();notifCount++;const b=document.getElementById('nBadge');b.textContent=notifCount>99?'99+':notifCount;b.classList.add('show');renderNP();}
+function clearNotifs(){notifs=[];notifCount=0;document.getElementById('nBadge').classList.remove('show');renderNP();}
+function toggleNP(){const p=document.getElementById('npPanel');p.classList.toggle('open');if(p.classList.contains('open')){notifCount=0;document.getElementById('nBadge').classList.remove('show');notifs.forEach(n=>n.read=true);renderNP();}}
+function renderNP(){const ico={driver:'🚗',trip:'✅',payout:'💸',report:'⚠️',broadcast:'📢',system:'⚙️'};document.getElementById('npCnt').textContent=notifs.length?`(${notifs.length})`:'';document.getElementById('npList').innerHTML=notifs.length?notifs.map(n=>`<div class="np-item ${n.read?'':'unread'}"><div class="np-ico">${ico[n.type]||'🔔'}</div><div><div class="np-txt">${n.text}</div><div class="np-tm">${ago(n.ts)}</div></div></div>`).join(''):'<div class="np-empty">All caught up!</div>';}
+function ago(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return'Just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
+function showPage(p){document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('active'));document.getElementById(p+'Page')?.classList.add('active');document.querySelector(`.sb-item[onclick="showPage('${p}')"]`)?.classList.add('active');const t={dashboard:'Dashboard',livemap:'Live Map',trips:'Trips',drivers:'Drivers',riders:'Riders',promos:'Promo Codes',revenue:'Revenue & Payouts',settings:'Settings'};document.getElementById('pageTitle').textContent=t[p]||p;document.getElementById('npPanel').classList.remove('open');if(p==='livemap'&&adminMap)google.maps.event.trigger(adminMap,'resize');if(p==='trips')renderAllTrips();if(p==='drivers')renderDriversTable();if(p==='riders')renderRidersTable();if(p==='promos')renderPromosTable();if(p==='revenue')renderRevenueStats();}
+function openMod(id){document.getElementById(id).classList.add('open');}
+function closeMod(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+function toast(msg,icon=''){document.querySelectorAll('.toast').forEach(t=>t.remove());const t=document.createElement('div');t.className='toast';t.innerHTML=icon?`<span>${icon}</span> ${msg}`:msg;document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(5px)';t.style.transition='.28s';setTimeout(()=>t.remove(),280);},3200);}
+</script>
+</body>
+</html>

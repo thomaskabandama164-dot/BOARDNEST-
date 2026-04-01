@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ZAP Rides — Rider</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+:root{--bg:#08090f;--sf:#0f1018;--sf2:#161722;--sf3:#1d1e2e;--bd:#252640;--ac:#6366f1;--acd:rgba(99,102,241,.1);--gr:#10b981;--rd:#ef4444;--am:#f59e0b;--tx:#e8e9f8;--t2:#7879a8;--mt:#454568;--r:16px;--rs:10px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;}
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;animation:fIn .28s ease;}
+@keyframes fIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+/* SPLASH */
+#splashScreen{background:var(--bg);align-items:center;justify-content:center;}
+.sp-mark{width:72px;height:72px;background:var(--ac);border-radius:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;animation:pop .65s cubic-bezier(.34,1.56,.64,1);}
+@keyframes pop{from{transform:scale(0) rotate(-20deg);}to{transform:scale(1) rotate(0);}}
+.sp-logo{font-family:'Syne',sans-serif;font-size:2.5rem;font-weight:800;text-align:center;letter-spacing:-.05em;}
+.sp-logo span{color:var(--ac);}
+.sp-tag{color:var(--mt);font-size:.82rem;text-align:center;margin-top:.25rem;letter-spacing:.04em;font-weight:600;text-transform:uppercase;}
+.sp-bar{width:110px;height:2.5px;background:var(--sf3);border-radius:2px;margin:2rem auto 0;overflow:hidden;}
+.sp-fill{height:100%;background:var(--ac);animation:lb 2s ease forwards;}
+@keyframes lb{from{width:0;}to{width:100%;}}
+/* AUTH */
+#authScreen{padding:2rem 1.4rem;overflow-y:auto;}
+.auth-logo{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:-.04em;padding-top:1.6rem;}
+.auth-logo span{color:var(--ac);}
+.auth-title{font-family:'Syne',sans-serif;font-size:1.65rem;font-weight:700;margin-top:.35rem;letter-spacing:-.02em;}
+.auth-sub{color:var(--t2);font-size:.85rem;margin-top:.25rem;margin-bottom:1.5rem;}
+.tabs{display:flex;gap:.3rem;background:var(--sf);border-radius:11px;padding:3px;margin-bottom:1.35rem;}
+.tab{flex:1;padding:.58rem;text-align:center;border-radius:9px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--t2);transition:all .2s;font-family:'Syne',sans-serif;}
+.tab.active{background:var(--ac);color:#fff;}
+.field{margin-bottom:.9rem;}
+.field label{display:block;font-size:.63rem;font-weight:600;color:var(--mt);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.09em;}
+.field input{width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);padding:.78rem .9rem;color:var(--tx);font-size:.88rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .18s;}
+.field input:focus{border-color:var(--ac);}
+.btn{width:100%;padding:.84rem;border:none;border-radius:var(--rs);font-size:.9rem;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:.45rem;letter-spacing:.01em;}
+.btn-primary{background:var(--ac);color:#fff;}
+.btn-primary:hover{opacity:.88;}
+.btn-ghost{background:var(--sf);border:1px solid var(--bd);color:var(--tx);margin-top:.45rem;}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.err-msg{font-size:.73rem;color:var(--rd);margin-top:.35rem;display:none;}
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.2rem;background:var(--sf);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:20;flex-shrink:0;}
+.tb-logo{font-family:'Syne',sans-serif;font-size:1.12rem;font-weight:800;letter-spacing:-.03em;}
+.tb-logo span{color:var(--ac);}
+.tb-right{display:flex;align-items:center;gap:.52rem;}
+.ico-btn{width:34px;height:34px;border-radius:var(--rs);background:var(--sf2);border:1px solid var(--bd);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);transition:all .18s;position:relative;flex-shrink:0;}
+.ico-btn:hover{background:var(--sf3);}
+.n-dot{position:absolute;top:-3px;right:-3px;width:13px;height:13px;background:var(--rd);border-radius:50%;font-size:.5rem;font-weight:700;color:#fff;display:none;align-items:center;justify-content:center;border:1.5px solid var(--sf);}
+.n-dot.show{display:flex;}
+.av-btn{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--ac),#8b5cf6);border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0;}
+/* BANNERS */
+.banner{padding:.58rem 1.2rem;font-size:.76rem;display:none;align-items:center;gap:.42rem;flex-shrink:0;}
+.banner.show{display:flex;}
+.b-surge{background:rgba(245,158,11,.07);border-bottom:1px solid rgba(245,158,11,.18);color:var(--am);}
+.b-broadcast{background:rgba(99,102,241,.07);border-bottom:1px solid rgba(99,102,241,.18);color:var(--ac);}
+.b-maint{background:rgba(239,68,68,.07);border-bottom:1px solid rgba(239,68,68,.18);color:var(--rd);}
+.bx{margin-left:auto;cursor:pointer;opacity:.55;}
+/* MAP */
+.map-wrap{height:255px;flex-shrink:0;position:relative;}
+#riderMap{width:100%;height:100%;}
+.map-ph{width:100%;height:100%;background:var(--sf2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;color:var(--mt);font-size:.76rem;text-align:center;padding:1rem;}
+/* PANEL */
+.panel{flex:1;background:var(--sf);border-radius:22px 22px 0 0;margin-top:-13px;padding:0 1.2rem 1.2rem;overflow-y:auto;z-index:5;}
+.pgrip{padding:.65rem 0;}
+.ph{width:32px;height:3px;background:var(--bd);border-radius:2px;margin:0 auto;}
+/* WALLET */
+.wallet-strip{background:linear-gradient(120deg,var(--sf2),rgba(99,102,241,.06));border:1px solid var(--bd);border-radius:var(--r);padding:.88rem 1.1rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.05rem;}
+.wl-lbl{font-size:.63rem;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.07em;}
+.wl-amt{font-family:'DM Mono',monospace;font-size:1.35rem;font-weight:500;margin-top:.12rem;}
+.wl-add{background:var(--ac);border:none;border-radius:7px;padding:.36rem .82rem;font-size:.74rem;font-weight:700;color:#fff;cursor:pointer;font-family:'Syne',sans-serif;display:flex;align-items:center;gap:.3rem;}
+/* LOCATION INPUTS */
+.loc-box{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.72rem .95rem;margin-bottom:.92rem;position:relative;}
+.loc-row{display:flex;align-items:center;gap:.72rem;padding:.36rem 0;}
+.loc-row+.loc-row{border-top:1px solid var(--bd);}
+.loc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.loc-dot.p{background:var(--gr);}
+.loc-dot.d{background:var(--rd);}
+.loc-inp{flex:1;background:transparent;border:none;outline:none;color:var(--tx);font-size:.86rem;font-family:'DM Sans',sans-serif;}
+.loc-inp::placeholder{color:var(--mt);}
+.swap-btn{width:24px;height:24px;border-radius:6px;background:var(--sf3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);flex-shrink:0;font-size:.82rem;}
+/* AUTOCOMPLETE DROPDOWN */
+.pac-container{background:var(--sf2)!important;border:1px solid var(--bd)!important;border-radius:var(--rs)!important;box-shadow:0 8px 24px rgba(0,0,0,.4)!important;margin-top:4px!important;font-family:'DM Sans',sans-serif!important;}
+.pac-item{padding:.55rem .82rem!important;font-size:.82rem!important;color:var(--t2)!important;border-top:1px solid var(--bd)!important;cursor:pointer!important;}
+.pac-item:hover,.pac-item-selected{background:var(--sf3)!important;}
+.pac-item-query{color:var(--tx)!important;font-weight:500!important;}
+.pac-icon{display:none!important;}
+/* RIDE OPTIONS */
+.ride-opts{display:flex;gap:.42rem;margin-bottom:.92rem;overflow-x:auto;padding-bottom:.22rem;}
+.ride-opt{flex-shrink:0;background:var(--sf2);border:1px solid var(--bd);border-radius:11px;padding:.58rem .78rem;cursor:pointer;transition:all .18s;min-width:82px;text-align:center;}
+.ride-opt.sel{border-color:var(--ac);background:var(--acd);}
+.ro-ico{font-size:1.1rem;}
+.ro-name{font-size:.72rem;font-weight:700;margin-top:.18rem;font-family:'Syne',sans-serif;letter-spacing:.01em;}
+.ro-price{font-size:.68rem;color:var(--t2);margin-top:.06rem;font-family:'DM Mono',monospace;}
+.ro-eta{font-size:.62rem;color:var(--gr);margin-top:.04rem;font-weight:600;}
+/* PROMO + PAY */
+.row2{display:flex;gap:.52rem;margin-bottom:.92rem;}
+.promo-wrap{flex:1;display:flex;align-items:center;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:.46rem .68rem;gap:.32rem;}
+.promo-inp{flex:1;background:transparent;border:none;outline:none;color:var(--tx);font-size:.78rem;font-family:'DM Sans',sans-serif;text-transform:uppercase;}
+.promo-inp::placeholder{color:var(--mt);text-transform:none;}
+.promo-go{background:var(--sf3);border:none;padding:.28rem .58rem;border-radius:5px;color:var(--ac);font-size:.68rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;}
+.pay-chip{display:flex;align-items:center;gap:.32rem;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:.46rem .68rem;cursor:pointer;font-size:.78rem;white-space:nowrap;font-weight:500;}
+/* FARE + BOOK */
+.fare-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.92rem;}
+.fare-lbl{font-size:.74rem;color:var(--t2);font-weight:500;}
+.fare-val{font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:500;color:var(--ac);}
+.book-btn{background:var(--ac);color:#fff;font-size:.95rem;font-weight:700;border-radius:14px;padding:.92rem;border:none;cursor:pointer;width:100%;font-family:'Syne',sans-serif;display:flex;align-items:center;justify-content:center;gap:.52rem;transition:opacity .15s;letter-spacing:.02em;}
+.book-btn:hover{opacity:.88;}
+/* TRACKING */
+.track-topbar{padding:.9rem 1.2rem;background:var(--sf);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:.72rem;flex-shrink:0;}
+.back-btn{width:30px;height:30px;border-radius:8px;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t2);}
+.track-title-wrap{flex:1;}
+.track-title{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;}
+.track-sub{font-size:.72rem;color:var(--t2);margin-top:.06rem;}
+.eta-chip{background:var(--acd);border:1px solid rgba(99,102,241,.22);border-radius:20px;padding:.26rem .68rem;font-size:.76rem;color:var(--ac);font-family:'DM Mono',monospace;flex-shrink:0;}
+.track-map-wrap{height:200px;flex-shrink:0;}
+#trackMap{width:100%;height:100%;}
+.track-panel{flex:1;background:var(--sf);border-radius:20px 20px 0 0;margin-top:-11px;padding:1.05rem;overflow-y:auto;z-index:5;}
+.drv-card{display:flex;align-items:center;gap:.78rem;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.9rem;margin-bottom:.9rem;}
+.drv-av{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--ac),#8b5cf6);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:.92rem;color:#fff;flex-shrink:0;}
+.drv-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;}
+.drv-veh{font-size:.72rem;color:var(--t2);margin-top:.15rem;}
+.drv-rating{font-size:.7rem;color:var(--ac);margin-top:.08rem;font-weight:600;}
+.drv-acts{margin-left:auto;display:flex;gap:.42rem;}
+.drv-act{width:32px;height:32px;border-radius:8px;border:1px solid var(--bd);background:var(--sf3);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);transition:all .15s;}
+.drv-act:hover{background:var(--bd);color:var(--tx);}
+/* STEPS */
+.steps-row{display:flex;align-items:center;margin-bottom:.52rem;}
+.scirc{width:22px;height:22px;border-radius:50%;background:var(--sf3);border:1.5px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;flex-shrink:0;transition:all .28s;}
+.scirc.curr{background:var(--ac);color:#fff;border-color:var(--ac);}
+.scirc.done{background:var(--gr);color:#fff;border-color:var(--gr);}
+.sline{flex:1;height:1.5px;background:var(--bd);transition:background .28s;}
+.sline.done{background:var(--gr);}
+.step-lbls{display:flex;justify-content:space-between;margin-bottom:.9rem;}
+.slbl{font-size:.58rem;font-weight:600;color:var(--mt);text-align:center;flex:1;text-transform:uppercase;letter-spacing:.05em;}
+.slbl.curr{color:var(--ac);}
+.slbl.done{color:var(--gr);}
+/* CHAT */
+.chat-wrap{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:.9rem;}
+.chat-hd{padding:.55rem .9rem;border-bottom:1px solid var(--bd);font-family:'Syne',sans-serif;font-size:.76rem;font-weight:700;color:var(--ac);display:flex;align-items:center;gap:.38rem;}
+.chat-box{height:90px;overflow-y:auto;padding:.52rem;display:flex;flex-direction:column;gap:.3rem;}
+.chat-msg{padding:.36rem .58rem;border-radius:7px;font-size:.74rem;max-width:78%;}
+.msg-out{background:var(--ac);color:#fff;align-self:flex-end;}
+.msg-in{background:var(--sf3);align-self:flex-start;}
+.chat-inp-row{display:flex;gap:.42rem;padding:.48rem;border-top:1px solid var(--bd);}
+.chat-inp{flex:1;background:var(--sf);border:1px solid var(--bd);border-radius:7px;padding:.4rem .62rem;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:.76rem;outline:none;}
+.chat-inp:focus{border-color:var(--ac);}
+.chat-send{width:30px;height:30px;border-radius:7px;background:var(--ac);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+.track-acts{display:flex;gap:.52rem;margin-bottom:.9rem;}
+.ta-btn{flex:1;padding:.62rem;border-radius:var(--rs);font-family:'Syne',sans-serif;font-weight:700;font-size:.76rem;cursor:pointer;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);display:flex;align-items:center;justify-content:center;gap:.32rem;letter-spacing:.01em;}
+.ta-btn.sos{color:var(--rd);border-color:rgba(239,68,68,.28);background:rgba(239,68,68,.07);}
+/* HISTORY */
+.tc{background:var(--sf2);border:1px solid var(--bd);border-radius:13px;padding:.82rem .92rem;margin-bottom:.52rem;cursor:pointer;transition:border-color .15s;}
+.tc:hover{border-color:var(--ac);}
+.tc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;}
+.tc-date{font-size:.68rem;color:var(--t2);}
+.tc-fare{font-family:'DM Mono',monospace;font-weight:500;color:var(--ac);}
+.tc-route{display:flex;align-items:center;gap:.32rem;font-size:.78rem;margin-bottom:.3rem;}
+.tc-badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:.6rem;font-weight:600;}
+.b-ok{background:rgba(16,185,129,.1);color:var(--gr);}
+.b-bad{background:rgba(239,68,68,.1);color:var(--rd);}
+/* PROFILE */
+.prof-hero{padding:1.35rem 1.2rem;background:linear-gradient(160deg,var(--sf),rgba(99,102,241,.03));border-bottom:1px solid var(--bd);flex-shrink:0;}
+.prof-av{width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,var(--ac),#8b5cf6);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;color:#fff;margin-bottom:.68rem;}
+.prof-name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:-.02em;}
+.prof-email{font-size:.76rem;color:var(--t2);margin-top:.15rem;}
+.prof-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.48rem;padding:.9rem 1.2rem;border-bottom:1px solid var(--bd);flex-shrink:0;}
+.ps-box{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:.62rem;text-align:center;}
+.ps-val{font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500;}
+.ps-lbl{font-size:.58rem;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.06em;margin-top:.12rem;}
+.ref-card{margin:.9rem 1.2rem;background:linear-gradient(120deg,rgba(99,102,241,.06),rgba(139,92,246,.04));border:1px solid rgba(99,102,241,.18);border-radius:var(--r);padding:.9rem;}
+.ref-title{font-family:'Syne',sans-serif;font-size:.76rem;font-weight:700;margin-bottom:.32rem;}
+.ref-code{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:500;letter-spacing:.1em;color:var(--ac);}
+.ref-sub{font-size:.68rem;color:var(--t2);margin-top:.15rem;}
+.ref-copy{margin-top:.52rem;background:var(--ac);border:none;border-radius:7px;padding:.36rem .82rem;font-size:.7rem;font-weight:700;color:#fff;cursor:pointer;font-family:'Syne',sans-serif;display:inline-flex;align-items:center;gap:.3rem;}
+.menu-list{padding:.38rem 0;}
+.menu-item{display:flex;align-items:center;gap:.72rem;padding:.78rem 1.2rem;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--bd);}
+.menu-item:hover{background:var(--sf2);}
+.menu-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.menu-lbl{font-size:.82rem;font-weight:500;}
+.menu-sub{font-size:.68rem;color:var(--t2);margin-top:.06rem;}
+.menu-arr{margin-left:auto;color:var(--mt);}
+/* BOTTOM NAV */
+.bottom-nav{background:var(--sf);border-top:1px solid var(--bd);padding:.65rem 0 .38rem;display:flex;align-items:center;justify-content:space-around;flex-shrink:0;position:sticky;bottom:0;z-index:10;}
+.bni{display:flex;flex-direction:column;align-items:center;gap:.22rem;cursor:pointer;padding:.26rem .65rem;border-radius:8px;color:var(--mt);font-size:.58rem;font-weight:600;transition:all .18s;font-family:'Syne',sans-serif;letter-spacing:.05em;text-transform:uppercase;}
+.bni.active{color:var(--ac);}
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;align-items:flex-end;}
+.overlay.open{display:flex;}
+.modal{width:100%;background:var(--sf);border-radius:20px 20px 0 0;padding:1.25rem;max-height:88vh;overflow-y:auto;}
+.modal-handle{width:32px;height:3px;background:var(--bd);border-radius:2px;margin:0 auto .82rem;}
+.modal-title{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;margin-bottom:.95rem;}
+.pay-opt{display:flex;align-items:center;gap:.72rem;padding:.78rem .92rem;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:.52rem;cursor:pointer;transition:all .18s;}
+.pay-opt.sel{border-color:var(--ac);background:var(--acd);}
+.pay-opt-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.83rem;}
+.pay-opt-sub{font-size:.68rem;color:var(--t2);}
+.topup-grid{display:grid;grid-template-columns:1fr 1fr;gap:.42rem;margin-bottom:.88rem;}
+.star{font-size:1.4rem;color:var(--bd);cursor:pointer;transition:color .15s;}
+.star.lit{color:var(--ac);}
+.stars-row{display:flex;gap:.26rem;justify-content:center;margin:1rem 0;}
+.m-field{margin-bottom:.75rem;}
+.m-field label{display:block;font-size:.62rem;font-weight:600;color:var(--mt);margin-bottom:.26rem;text-transform:uppercase;letter-spacing:.08em;}
+.m-field input{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);padding:.62rem .75rem;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:.8rem;outline:none;}
+.m-field input:focus{border-color:var(--ac);}
+.notif-item{padding:.68rem;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:.42rem;}
+.notif-item.unread{border-left:2px solid var(--ac);}
+.notif-time{font-size:.62rem;color:var(--mt);margin-top:.22rem;}
+.empty-state{text-align:center;padding:1.8rem 1rem;color:var(--mt);font-size:.78rem;}
+/* TOAST */
+.toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:.58rem .95rem;font-size:.77rem;z-index:600;animation:tIn .28s ease;box-shadow:0 5px 18px rgba(0,0,0,.5);white-space:nowrap;display:flex;align-items:center;gap:.35rem;}
+@keyframes tIn{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div class="screen active" id="splashScreen">
+  <div class="sp-mark"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+  <div class="sp-logo">ZAP<span>Rides</span></div>
+  <div class="sp-tag">Zambia's Fastest Rides</div>
+  <div class="sp-bar"><div class="sp-fill"></div></div>
+</div>
+
+<!-- AUTH -->
+<div class="screen" id="authScreen">
+  <div class="auth-logo">ZAP<span>Rides</span></div>
+  <div class="auth-title">Get moving, fast</div>
+  <div class="auth-sub">Book rides, track drivers, pay in Kwacha</div>
+  <div class="tabs">
+    <div class="tab active" id="tabL" onclick="switchTab('login')">Sign In</div>
+    <div class="tab" id="tabR" onclick="switchTab('register')">Register</div>
+  </div>
+  <div id="loginForm">
+    <div class="field"><label>Email Address</label><input type="email" id="lEmail" placeholder="your@email.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="lPw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Sign In
+    </button>
+    <div class="err-msg" id="loginErr"></div>
+  </div>
+  <div id="registerForm" style="display:none">
+    <div class="field"><label>Full Name *</label><input type="text" id="rName" placeholder="Your full name"></div>
+    <div class="field"><label>Email *</label><input type="email" id="rEmail" placeholder="your@email.com"></div>
+    <div class="field"><label>Phone *</label><input type="tel" id="rPhone" placeholder="+260 97 000 0000"></div>
+    <div class="field"><label>Password * (min 6 chars)</label><input type="password" id="rPw" placeholder="Create password"></div>
+    <button class="btn btn-primary" id="regBtn" onclick="doRegister()">Create Account</button>
+    <div class="err-msg" id="regErr"></div>
+  </div>
+</div>
+
+<!-- HOME SCREEN -->
+<div class="screen" id="homeScreen">
+  <div class="banner b-surge" id="surgeBanner">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    <span id="surgeText">Surge pricing active — fares higher than normal</span>
+  </div>
+  <div class="banner b-broadcast" id="broadcastBanner">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span id="broadcastText"></span><span class="bx" onclick="this.parentElement.classList.remove('show')">✕</span>
+  </div>
+  <div class="banner b-maint" id="maintBanner">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Platform under maintenance — booking temporarily paused
+  </div>
+
+  <div class="topbar">
+    <div class="tb-logo">ZAP<span>Rides</span></div>
+    <div class="tb-right">
+      <button class="ico-btn" onclick="openM('notifModal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="n-dot" id="nDot">0</span>
+      </button>
+      <button class="av-btn" id="riderAv" onclick="goTo('profile')">R</button>
+    </div>
+  </div>
+
+  <div class="map-wrap">
+    <div id="riderMap"><div class="map-ph"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--mt)" stroke-width="1.5"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg><span>Live map — add your Google Maps API key to enable</span></div></div>
+  </div>
+
+  <div class="panel">
+    <div class="pgrip"><div class="ph"></div></div>
+    <div class="wallet-strip">
+      <div><div class="wl-lbl">Wallet Balance</div><div class="wl-amt" id="walletAmt">K0.00</div></div>
+      <button class="wl-add" onclick="openM('walletModal')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Top Up
+      </button>
+    </div>
+
+    <div class="loc-box">
+      <div class="loc-row">
+        <div class="loc-dot p"></div>
+        <input class="loc-inp" id="pickupInp" placeholder="Detecting your location...">
+        <button class="swap-btn" onclick="swapLoc()" title="Swap locations">⇅</button>
+      </div>
+      <div class="loc-row">
+        <div class="loc-dot d"></div>
+        <input class="loc-inp" id="dropInp" placeholder="Where to? Start typing...">
+      </div>
+    </div>
+
+    <div class="ride-opts" id="rideOpts"></div>
+
+    <div class="row2">
+      <div class="promo-wrap">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        <input class="promo-inp" id="promoInp" placeholder="Promo code">
+        <button class="promo-go" onclick="applyPromo()">Apply</button>
+      </div>
+      <div class="pay-chip" onclick="openM('payModal')">
+        <span id="payIco">💵</span><span id="payDisplay">Cash</span>
+      </div>
+    </div>
+
+    <div class="fare-row">
+      <div class="fare-lbl">Estimated Fare</div>
+      <div class="fare-val" id="fareDisplay">K0.00</div>
+    </div>
+
+    <button class="book-btn" id="bookBtn" onclick="bookRide()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+      Book Ride
+    </button>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="bni active" onclick="goTo('home')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></div>
+    <div class="bni" onclick="goTo('history')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>History</span></div>
+    <div class="bni" onclick="goTo('profile')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg><span>Profile</span></div>
+  </nav>
+</div>
+
+<!-- TRACKING SCREEN -->
+<div class="screen" id="trackingScreen">
+  <div class="track-topbar">
+    <div class="back-btn" onclick="cancelRide()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <div class="track-title-wrap">
+      <div class="track-title" id="trkTitle">Finding Your Driver</div>
+      <div class="track-sub" id="trkSub">Connecting to nearby drivers...</div>
+    </div>
+    <div class="eta-chip">ETA <span id="etaVal">—</span></div>
+  </div>
+  <div class="track-map-wrap"><div id="trackMap"></div></div>
+  <div class="track-panel">
+    <div class="drv-card">
+      <div class="drv-av" id="drvAv">D</div>
+      <div>
+        <div class="drv-name" id="drvNm">Searching...</div>
+        <div class="drv-veh" id="drvVeh">—</div>
+        <div class="drv-rating" id="drvRating"></div>
+      </div>
+      <div class="drv-acts">
+        <div class="drv-act" onclick="callDriver()" title="Call driver"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.59a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+        <div class="drv-act" onclick="shareTrip()" title="Share trip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
+      </div>
+    </div>
+    <div class="steps-row">
+      <div class="scirc curr" id="s1">1</div><div class="sline" id="l1"></div>
+      <div class="scirc" id="s2">2</div><div class="sline" id="l2"></div>
+      <div class="scirc" id="s3">3</div><div class="sline" id="l3"></div>
+      <div class="scirc" id="s4">4</div>
+    </div>
+    <div class="step-lbls">
+      <span class="slbl curr" id="sl1">Matched</span>
+      <span class="slbl" id="sl2">En Route</span>
+      <span class="slbl" id="sl3">Arrived</span>
+      <span class="slbl" id="sl4">Done</span>
+    </div>
+    <div class="chat-wrap">
+      <div class="chat-hd"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat with Driver</div>
+      <div class="chat-box" id="chatBox"></div>
+      <div class="chat-inp-row">
+        <input class="chat-inp" id="chatInp" placeholder="Message driver..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" onclick="sendChat()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+    <div class="track-acts">
+      <button class="ta-btn sos" onclick="triggerSOS()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>SOS Emergency</button>
+      <button class="ta-btn" onclick="cancelRide()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Cancel Ride</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY SCREEN -->
+<div class="screen" id="historyScreen" style="overflow-y:auto">
+  <div class="topbar"><div class="tb-logo">Trip History</div><button class="ico-btn" onclick="goTo('home')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div style="padding:.95rem 1.2rem">
+    <div style="font-size:.76rem;color:var(--t2);margin-bottom:.95rem" id="histMeta">Loading...</div>
+    <div id="histList"></div>
+  </div>
+  <nav class="bottom-nav">
+    <div class="bni" onclick="goTo('home')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></div>
+    <div class="bni active"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>History</span></div>
+    <div class="bni" onclick="goTo('profile')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg><span>Profile</span></div>
+  </nav>
+</div>
+
+<!-- PROFILE SCREEN -->
+<div class="screen" id="profileScreen" style="overflow-y:auto">
+  <div class="prof-hero">
+    <div class="prof-av" id="profAv">R</div>
+    <div class="prof-name" id="profName">Rider</div>
+    <div class="prof-email" id="profEmail">—</div>
+  </div>
+  <div class="prof-stats">
+    <div class="ps-box"><div class="ps-val" id="profTrips">0</div><div class="ps-lbl">Trips</div></div>
+    <div class="ps-box"><div class="ps-val" id="profSpent">K0</div><div class="ps-lbl">Spent</div></div>
+    <div class="ps-box"><div class="ps-val" id="profRating">5.0⭐</div><div class="ps-lbl">Rating</div></div>
+  </div>
+  <div class="ref-card">
+    <div class="ref-title">Refer & Earn</div>
+    <div class="ref-code" id="refCode">ZAPXXXX</div>
+    <div class="ref-sub">Share your code — you both get K20 off your next ride</div>
+    <button class="ref-copy" onclick="copyRef()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Code</button>
+  </div>
+  <div class="menu-list">
+    <div class="menu-item" onclick="openM('walletModal')"><div class="menu-ico" style="background:rgba(99,102,241,.1)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div><div class="menu-lbl">Wallet</div><div class="menu-sub" id="walletMenuSub">Top up balance</div></div><svg class="menu-arr" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="menu-item" onclick="openHelp()"><div class="menu-ico" style="background:rgba(16,185,129,.1)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><div class="menu-lbl">Help & Support</div><div class="menu-sub">Contact our support team</div></div><svg class="menu-arr" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="menu-item" onclick="openSafety()"><div class="menu-ico" style="background:rgba(239,68,68,.1)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--rd)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="menu-lbl">Safety</div><div class="menu-sub">Emergency contacts & SOS</div></div><svg class="menu-arr" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div class="menu-item" onclick="doLogout()"><div class="menu-ico" style="background:rgba(239,68,68,.1)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--rd)" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div><div class="menu-lbl">Sign Out</div></div></div>
+  </div>
+  <nav class="bottom-nav">
+    <div class="bni" onclick="goTo('home')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></div>
+    <div class="bni" onclick="goTo('history')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>History</span></div>
+    <div class="bni active"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg><span>Profile</span></div>
+  </nav>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="payModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Payment Method</div>
+    <div class="pay-opt sel" onclick="choosePay('Cash','💵',0)"><span style="font-size:1.1rem">💵</span><div><div class="pay-opt-name">Cash</div><div class="pay-opt-sub">Pay driver directly</div></div></div>
+    <div class="pay-opt" onclick="choosePay('Wallet','💳',1)"><span style="font-size:1.1rem">💳</span><div><div class="pay-opt-name">ZAP Wallet</div><div class="pay-opt-sub" id="walletPaySub">Balance: K0.00</div></div></div>
+    <div class="pay-opt" onclick="choosePay('Mobile Money','📱',2)"><span style="font-size:1.1rem">📱</span><div><div class="pay-opt-name">Mobile Money</div><div class="pay-opt-sub">Airtel, MTN, Zamtel</div></div></div>
+    <div class="pay-opt" onclick="choosePay('Card','🏦',3)"><span style="font-size:1.1rem">🏦</span><div><div class="pay-opt-name">Debit / Credit Card</div><div class="pay-opt-sub">Visa, Mastercard</div></div></div>
+    <button class="btn btn-ghost" style="margin-top:.75rem" onclick="closeM('payModal')">Done</button>
+  </div>
+</div>
+
+<div class="overlay" id="ratingModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="ratingTitle">Rate Your Trip</div>
+    <div class="stars-row">
+      <span class="star" onclick="setRating(1)">★</span>
+      <span class="star" onclick="setRating(2)">★</span>
+      <span class="star" onclick="setRating(3)">★</span>
+      <span class="star" onclick="setRating(4)">★</span>
+      <span class="star" onclick="setRating(5)">★</span>
+    </div>
+    <div class="m-field"><label>Comments (optional)</label><input type="text" id="rNote" placeholder="How was your experience?"></div>
+    <button class="btn btn-primary" onclick="submitRating()">Submit Rating</button>
+    <button class="btn btn-ghost" onclick="closeM('ratingModal');goTo('home')">Skip</button>
+  </div>
+</div>
+
+<div class="overlay" id="notifModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Notifications</div>
+    <div id="notifList"><div class="empty-state">No notifications yet</div></div>
+    <button class="btn btn-ghost" onclick="closeM('notifModal')">Close</button>
+  </div>
+</div>
+
+<div class="overlay" id="walletModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Top Up Wallet</div>
+    <div style="color:var(--t2);font-size:.82rem;margin-bottom:.88rem">Current balance: <strong style="color:var(--ac);font-family:'DM Mono',monospace" id="wModalBal">K0.00</strong></div>
+    <div class="topup-grid">
+      <button class="btn btn-ghost" style="font-family:'DM Mono',monospace;font-weight:600" onclick="document.getElementById('topupAmt').value=20">K20</button>
+      <button class="btn btn-ghost" style="font-family:'DM Mono',monospace;font-weight:600" onclick="document.getElementById('topupAmt').value=50">K50</button>
+      <button class="btn btn-ghost" style="font-family:'DM Mono',monospace;font-weight:600" onclick="document.getElementById('topupAmt').value=100">K100</button>
+      <button class="btn btn-ghost" style="font-family:'DM Mono',monospace;font-weight:600" onclick="document.getElementById('topupAmt').value=200">K200</button>
+    </div>
+    <div class="m-field"><label>Custom Amount (K)</label><input type="number" id="topupAmt" placeholder="Enter amount" min="1"></div>
+    <button class="btn btn-primary" onclick="processTopup()">Add to Wallet</button>
+    <button class="btn btn-ghost" onclick="closeM('walletModal')">Cancel</button>
+  </div>
+</div>
+
+<script>
+const FB={apiKey:"AIzaSyCjAwUB4chgwLwdOGpF5EY7T1Sof_1ZJsI",authDomain:"zap-ride.firebaseapp.com",databaseURL:"https://zap-ride-default-rtdb.firebaseio.com",projectId:"zap-ride",storageBucket:"zap-ride.firebasestorage.app",messagingSenderId:"304024002065",appId:"1:304024002065:web:efa03929d0b6fc26e99bb0"};
+const GMAPS_KEY="YOUR_GOOGLE_MAPS_API_KEY";
+firebase.initializeApp(FB);
+const auth=firebase.auth(),db=firebase.database();
+const zmw=v=>'K'+parseFloat(v||0).toFixed(2);
+
+let S={uid:null,user:null,wallet:0,rideIdx:0,payMethod:'Cash',payIco:'💵',promoApplied:false,promoDiscount:0,appliedPromoCode:null,currentTripId:null,currentDriver:null,rating:0,surgeMultiplier:1.0,maintenanceMode:false,locationPoll:null};
+let riderMap=null,riderMapMarker=null,trackMap=null,trackDriverMarker=null,chatListener=null,tripListener=null,notifListener=null,driverMarkers={};
+let notifs=[];
+let pickupAC=null,dropAC=null;
+let pickupLat=null,pickupLng=null,dropoffLat=null,dropoffLng=null;
+
+const RIDE_TYPES=[
+  {name:'Economy',ico:'🚗',basePrice:35,eta:'3-5 min'},
+  {name:'Comfort',ico:'🚙',basePrice:55,eta:'2-4 min'},
+  {name:'Premium',ico:'🏎️',basePrice:95,eta:'4-7 min'},
+  {name:'Moto',ico:'🏍️',basePrice:20,eta:'1-3 min'}
+];
+
+// ── GOOGLE MAPS ──
+function loadGoogleMaps(){
+  if(GMAPS_KEY==='YOUR_GOOGLE_MAPS_API_KEY')return;
+  const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&libraries=places&callback=initMaps`;s.async=true;document.head.appendChild(s);
+}
+window.initMaps=function(){
+  const mapStyle=[{elementType:'geometry',stylers:[{color:'#0f1018'}]},{elementType:'labels.text.fill',stylers:[{color:'#454568'}]},{featureType:'road',elementType:'geometry',stylers:[{color:'#1d1e2e'}]},{featureType:'road.highway',elementType:'geometry',stylers:[{color:'#252640'}]},{featureType:'water',elementType:'geometry',stylers:[{color:'#08090f'}]},{featureType:'poi',stylers:[{visibility:'off'}]}];
+  // Home map
+  const rEl=document.getElementById('riderMap');rEl.innerHTML='';
+  riderMap=new google.maps.Map(rEl,{center:{lat:-15.4167,lng:28.2833},zoom:13,disableDefaultUI:true,zoomControl:true,styles:mapStyle});
+  // Track map
+  const tEl=document.getElementById('trackMap');tEl.innerHTML='';
+  trackMap=new google.maps.Map(tEl,{center:{lat:-15.4167,lng:28.2833},zoom:14,disableDefaultUI:true,styles:mapStyle});
+  // Places Autocomplete on dropoff input only (pickup = auto GPS)
+  dropAC=new google.maps.places.Autocomplete(document.getElementById('dropInp'),{types:['geocode','establishment'],componentRestrictions:{country:'zm'}});
+  dropAC.addListener('place_changed',()=>{
+    const p=dropAC.getPlace();
+    if(p?.geometry){
+      dropoffLat=p.geometry.location.lat();dropoffLng=p.geometry.location.lng();
+      showNearbyDrivers();recalcFare();
+      if(riderMap){
+        riderMap.setCenter(p.geometry.location);
+        if(!riderMapMarker)return;
+        const b=new google.maps.LatLngBounds();b.extend({lat:pickupLat||p.geometry.location.lat(),lng:pickupLng||p.geometry.location.lng()});b.extend(p.geometry.location);riderMap.fitBounds(b);
+      }
+    }
+  });
+  // Get user's current location automatically
+  detectCurrentLocation();
+};
+function detectCurrentLocation(){
+  document.getElementById('pickupInp').value='Detecting location...';
+  if(!navigator.geolocation){document.getElementById('pickupInp').value='Current Location';return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    pickupLat=pos.coords.latitude;pickupLng=pos.coords.longitude;
+    if(riderMap){riderMap.setCenter({lat:pickupLat,lng:pickupLng});riderMap.setZoom(14);}
+    // Reverse geocode to human-readable address
+    const gc=new google.maps.Geocoder();
+    gc.geocode({location:{lat:pickupLat,lng:pickupLng}},(r,status)=>{
+      if(status==='OK'&&r[0]){document.getElementById('pickupInp').value=r[0].formatted_address;}
+      else{document.getElementById('pickupInp').value='Current Location';}
+    });
+    // Place pickup marker
+    if(riderMap){
+      if(riderMapMarker)riderMapMarker.setMap(null);
+      riderMapMarker=new google.maps.Marker({position:{lat:pickupLat,lng:pickupLng},map:riderMap,icon:{path:google.maps.SymbolPath.CIRCLE,scale:8,fillColor:'#10b981',fillOpacity:1,strokeColor:'#fff',strokeWeight:2},title:'Your location'});
+    }
+    showNearbyDrivers();
+  },err=>{document.getElementById('pickupInp').value='Current Location';},{enableHighAccuracy:true,timeout:8000});
+}
+function showNearbyDrivers(){
+  if(!riderMap)return;
+  // Clear old markers
+  Object.values(driverMarkers).forEach(m=>m.setMap(null));
+  driverMarkers={};
+  // Load online drivers from Firebase and show on map
+  db.ref('drivers').orderByChild('status').once('value').then(snap=>{
+    const drivers=snap.val()||{};
+    Object.entries(drivers).forEach(([uid,d])=>{
+      if((d.status==='online'||d.status==='busy')&&d.location?.lat){
+        const pos={lat:parseFloat(d.location.lat),lng:parseFloat(d.location.lng)};
+        const col=d.status==='online'?'#10b981':'#6366f1';
+        driverMarkers[uid]=new google.maps.Marker({
+          position:pos,map:riderMap,
+          title:d.name+' · '+d.type,
+          icon:{path:'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z',fillColor:col,fillOpacity:1,strokeColor:'#fff',strokeWeight:1,scale:1.2,anchor:new google.maps.Point(12,24)}
+        });
+        driverMarkers[uid].addListener('click',()=>toast(d.name+' · '+d.type+' · ★'+d.rating,'🚗'));
+      }
+    });
+  });
+}
+function updateTrackMap(lat,lng){
+  if(!trackMap)return;
+  const pos={lat,lng};
+  if(trackDriverMarker)trackDriverMarker.setPosition(pos);
+  else trackDriverMarker=new google.maps.Marker({position:pos,map:trackMap,icon:{path:google.maps.SymbolPath.FORWARD_CLOSED_ARROW,scale:5,fillColor:'#6366f1',fillOpacity:1,strokeColor:'#fff',strokeWeight:1},title:'Driver'});
+  trackMap.setCenter(pos);
+}
+
+// ── AUTH ──
+function switchTab(t){document.getElementById('tabL').classList.toggle('active',t==='login');document.getElementById('tabR').classList.toggle('active',t==='register');document.getElementById('loginForm').style.display=t==='login'?'block':'none';document.getElementById('registerForm').style.display=t==='register'?'block':'none';}
+async function doLogin(){
+  const e=document.getElementById('lEmail').value.trim(),p=document.getElementById('lPw').value.trim();
+  if(!e||!p){showErr('loginErr','Fill in all fields');return;}
+  const btn=document.getElementById('loginBtn');btn.innerHTML='<div class="spin"></div> Signing in...';btn.disabled=true;
+  try{const c=await auth.signInWithEmailAndPassword(e,p);await loadRider(c.user.uid);btn.innerHTML='Sign In';btn.disabled=false;}
+  catch(er){showErr('loginErr',er.message.replace('Firebase: ',''));btn.innerHTML='Sign In';btn.disabled=false;}
+}
+async function doRegister(){
+  const n=document.getElementById('rName').value.trim(),e=document.getElementById('rEmail').value.trim(),ph=document.getElementById('rPhone').value.trim(),p=document.getElementById('rPw').value.trim();
+  if(!n||!e||!ph||!p){showErr('regErr','Fill in all fields');return;}
+  if(p.length<6){showErr('regErr','Password must be 6+ characters');return;}
+  const btn=document.getElementById('regBtn');btn.innerHTML='<div class="spin"></div> Creating...';btn.disabled=true;
+  try{
+    const c=await auth.createUserWithEmailAndPassword(e,p);
+    await c.user.updateProfile({displayName:n});
+    await db.ref('riders/'+c.user.uid).set({name:n,email:e,phone:ph,wallet:0,created:Date.now()});
+    await loadRider(c.user.uid);btn.innerHTML='Create Account';btn.disabled=false;
+  }catch(er){showErr('regErr',er.message.replace('Firebase: ',''));btn.innerHTML='Create Account';btn.disabled=false;}
+}
+function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.style.display='block';}
+auth.onAuthStateChanged(async u=>{if(u&&!S.uid){const s=await db.ref('riders/'+u.uid).once('value');if(s.val())await loadRider(u.uid);}});
+async function loadRider(uid){
+  S.uid=uid;const snap=await db.ref('riders/'+uid).once('value');const r=snap.val();if(!r)return;
+  S.user=r;S.wallet=r.wallet||0;updateUI();goTo('home');initRiderListeners();loadGoogleMaps();renderRideOpts();
+}
+function doLogout(){if(!confirm('Sign out?'))return;cleanupListeners();auth.signOut();location.reload();}
+
+// ── UI ──
+function updateUI(){
+  if(!S.user)return;
+  const init=(S.user.name||'R').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('riderAv').textContent=init;
+  document.getElementById('profAv').textContent=init;
+  document.getElementById('profName').textContent=S.user.name||'Rider';
+  document.getElementById('profEmail').textContent=S.user.email||'—';
+  document.getElementById('walletAmt').textContent=zmw(S.wallet);
+  document.getElementById('walletPaySub').textContent='Balance: '+zmw(S.wallet);
+  document.getElementById('wModalBal').textContent=zmw(S.wallet);
+  document.getElementById('walletMenuSub').textContent=zmw(S.wallet)+' balance';
+  const ref=(S.user.name||'RIDER').toUpperCase().replace(/\s/g,'').slice(0,4);
+  document.getElementById('refCode').textContent='ZAP'+ref;
+  loadProfileStats();
+}
+async function loadProfileStats(){
+  const snap=await db.ref('trips').orderByChild('riderId').equalTo(S.uid).once('value');
+  const trips=snap.val()?Object.values(snap.val()):[];
+  const done=trips.filter(t=>t.status==='completed');
+  const spent=done.reduce((s,t)=>s+parseFloat(t.fare||0),0);
+  document.getElementById('profTrips').textContent=done.length;
+  document.getElementById('profSpent').textContent=zmw(spent);
+}
+
+// ── RIDE OPTIONS ──
+function renderRideOpts(){
+  document.getElementById('rideOpts').innerHTML=RIDE_TYPES.map((r,i)=>`<div class="ride-opt ${i===S.rideIdx?'sel':''}" onclick="selectRide(${i})"><div class="ro-ico">${r.ico}</div><div class="ro-name">${r.name}</div><div class="ro-price">${zmw(r.basePrice*S.surgeMultiplier)}</div><div class="ro-eta">${r.eta}</div></div>`).join('');
+  recalcFare();
+}
+function selectRide(i){S.rideIdx=i;S.promoApplied=false;S.promoDiscount=0;document.getElementById('promoInp').value='';document.getElementById('promoInp').style.borderColor='';renderRideOpts();}
+function recalcFare(){
+  const base=RIDE_TYPES[S.rideIdx].basePrice*S.surgeMultiplier;
+  const fare=S.promoApplied?Math.max(0,base-S.promoDiscount):base;
+  document.getElementById('fareDisplay').textContent=zmw(fare);
+}
+function swapLoc(){
+  const a=document.getElementById('pickupInp').value,b=document.getElementById('dropInp').value;
+  document.getElementById('pickupInp').value=b;document.getElementById('dropInp').value=a;
+  const tLat=pickupLat,tLng=pickupLng;pickupLat=dropoffLat;pickupLng=dropoffLng;dropoffLat=tLat;dropoffLng=tLng;
+}
+
+// ── PROMO ──
+async function applyPromo(){
+  const code=document.getElementById('promoInp').value.trim().toUpperCase();
+  if(!code){toast('Enter a promo code','⚠️');return;}
+  if(S.promoApplied){toast('Promo already applied','⚠️');return;}
+  const snap=await db.ref('promos/'+code).once('value');const p=snap.val();
+  if(!p||p.status!=='active'){document.getElementById('promoInp').style.borderColor='var(--rd)';toast('Invalid or expired promo code','❌');return;}
+  if(p.max&&(p.uses||0)>=p.max){toast('Promo code usage limit reached','❌');return;}
+  const base=RIDE_TYPES[S.rideIdx].basePrice*S.surgeMultiplier;
+  const discount=p.type==='Percentage'?base*(parseFloat(p.discount)/100):parseFloat(p.discount?.replace(/[K%]/g,'')||0);
+  S.promoApplied=true;S.promoDiscount=discount;S.appliedPromoCode=code;
+  document.getElementById('promoInp').style.borderColor='var(--gr)';
+  document.getElementById('fareDisplay').textContent=zmw(Math.max(0,base-discount));
+  await db.ref('promos/'+code+'/uses').transaction(v=>(v||0)+1);
+  toast('Promo applied! You saved '+zmw(discount),'🎉');
+}
+
+// ── PAYMENT ──
+function choosePay(method,ico,idx){
+  document.querySelectorAll('.pay-opt').forEach((o,i)=>o.classList.toggle('sel',i===idx));
+  S.payMethod=method;S.payIco=ico;
+  document.getElementById('payDisplay').textContent=method;
+  document.getElementById('payIco').textContent=ico;
+  closeM('payModal');toast('Payment: '+method,'✅');
+}
+async function processTopup(){
+  const v=parseFloat(document.getElementById('topupAmt').value);
+  if(!v||v<1){toast('Enter a valid amount','⚠️');return;}
+  S.wallet+=v;await db.ref('riders/'+S.uid+'/wallet').set(S.wallet);
+  updateUI();closeM('walletModal');toast(zmw(v)+' added to wallet!','💳');
+}
+
+// ── BOOKING ──
+async function bookRide(){
+  const pickup=document.getElementById('pickupInp').value.trim();
+  const dropoff=document.getElementById('dropInp').value.trim();
+  if(!pickup||pickup==='Detecting location...'){toast('Waiting for location...','📍');return;}
+  if(!dropoff){toast('Enter your destination','⚠️');document.getElementById('dropInp').focus();return;}
+  if(S.maintenanceMode){toast('Platform under maintenance','🔧');return;}
+  const fareEl=document.getElementById('fareDisplay').textContent;
+  const fare=parseFloat(fareEl.replace('K','')||0);
+  if(S.payMethod==='Wallet'&&S.wallet<fare){toast('Insufficient wallet balance','⚠️');openM('walletModal');return;}
+  const btn=document.getElementById('bookBtn');
+  btn.innerHTML='<div class="spin"></div> Finding driver...';btn.disabled=true;
+  // Get coordinates if not already set
+  if(!pickupLat&&navigator.geolocation){
+    await new Promise(res=>navigator.geolocation.getCurrentPosition(pos=>{pickupLat=pos.coords.latitude;pickupLng=pos.coords.longitude;res();},()=>res(),{timeout:3000}));
+  }
+  const tripId=db.ref('trips').push().key;S.currentTripId=tripId;
+  const tripData={riderId:S.uid,riderName:S.user.name,riderPhone:S.user.phone||'',riderRating:S.user.rating||5,pickupAddress:pickup,dropoffAddress:dropoff,pickupLat:pickupLat||null,pickupLng:pickupLng||null,dropoffLat:dropoffLat||null,dropoffLng:dropoffLng||null,fare:fare.toFixed(2),rideType:RIDE_TYPES[S.rideIdx].name,payMethod:S.payMethod,status:'searching',createdAt:Date.now()};
+  await db.ref('trips/'+tripId).set(tripData);
+  const reqRef=db.ref('rideRequests').push();
+  await reqRef.set({...tripData,tripId,status:'pending',ts:Date.now(),distance:'~'+(Math.random()*8+2).toFixed(1)+' km',duration:'~'+(Math.floor(Math.random()*15)+5)+' min'});
+  if(S.payMethod==='Wallet'){S.wallet=Math.max(0,S.wallet-fare);await db.ref('riders/'+S.uid+'/wallet').set(S.wallet);updateUI();}
+  btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>Book Ride';btn.disabled=false;
+  goTo('tracking');listenForTripUpdates(tripId);
+}
+
+// ── TRIP TRACKING ──
+function listenForTripUpdates(tripId){
+  if(tripListener)db.ref('trips/'+tripId).off('value',tripListener);
+  tripListener=db.ref('trips/'+tripId).on('value',snap=>{
+    const t=snap.val();if(!t)return;
+    if(t.driverName&&t.driverName!=='Searching...'){
+      document.getElementById('drvAv').textContent=(t.driverName||'D')[0];
+      document.getElementById('drvNm').textContent=t.driverName;
+      document.getElementById('drvVeh').textContent=(t.driverVehicle||'')+(t.driverPlate?' · '+t.driverPlate:'');
+      document.getElementById('drvRating').textContent=t.driverRating?'★ '+t.driverRating+' · '+t.rideType:'';
+      S.currentDriver={name:t.driverName,phone:t.driverPhone||''};
+    }
+    const stepMap={accepted:1,enroute:2,arrived:3,intrip:4,completed:5};
+    if(stepMap[t.status])setSteps(stepMap[t.status]);
+    const titleMap={accepted:'Driver Found!',enroute:'Driver En Route',arrived:'Driver Arrived',intrip:'Trip in Progress',completed:'You Have Arrived!'};
+    const subMap={accepted:(t.driverName||'Driver')+' is on the way',enroute:'Heading to your pickup point',arrived:'Your driver is waiting at pickup',intrip:'Enjoy your ride to '+t.dropoffAddress?.split(',')[0],completed:'You have reached your destination!'};
+    if(titleMap[t.status])document.getElementById('trkTitle').textContent=titleMap[t.status];
+    if(subMap[t.status])document.getElementById('trkSub').textContent=subMap[t.status];
+    if(t.status==='accepted'||t.status==='enroute')startETA(5);
+    else if(t.status==='intrip')document.getElementById('etaVal').textContent='Arriving';
+    if(t.status==='completed'){setTimeout(()=>{stopETA();finishTrip(t);},600);}
+    if(t.driverId){db.ref('drivers/'+t.driverId+'/location').once('value').then(s=>{const l=s.val();if(l?.lat)updateTrackMap(parseFloat(l.lat),parseFloat(l.lng));});}
+    if(t.status==='accepted'&&!chatListener)listenForChat(tripId);
+  });
+  // Poll driver location every 5 seconds
+  S.locationPoll=setInterval(async()=>{
+    const snap=await db.ref('trips/'+tripId).once('value');const t=snap.val();
+    if(!t||['completed','cancelled'].includes(t.status)){clearInterval(S.locationPoll);return;}
+    if(t.driverId){const l=(await db.ref('drivers/'+t.driverId+'/location').once('value')).val();if(l?.lat)updateTrackMap(parseFloat(l.lat),parseFloat(l.lng));}
+  },5000);
+}
+let etaIv=null;
+function startETA(mins){
+  if(etaIv)clearInterval(etaIv);let s=mins*60;
+  const fmt=()=>{const m=Math.floor(s/60),sec=s%60;return m>0?m+'m ':''+(sec<10?'0':'')+sec+'s';};
+  document.getElementById('etaVal').textContent=fmt();
+  etaIv=setInterval(()=>{s=Math.max(0,s-1);document.getElementById('etaVal').textContent=fmt();if(s===0){clearInterval(etaIv);document.getElementById('etaVal').textContent='Now!';}},1000);
+}
+function stopETA(){if(etaIv){clearInterval(etaIv);etaIv=null;}}
+function setSteps(curr){
+  for(let i=1;i<=4;i++){
+    const el=document.getElementById('s'+i),ll=document.getElementById('sl'+i);
+    if(i<curr){el.className='scirc done';el.innerHTML='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';if(ll)ll.className='slbl done';}
+    else if(i===curr){el.className='scirc curr';el.textContent=i;if(ll)ll.className='slbl curr';}
+    else{el.className='scirc';el.textContent=i;if(ll)ll.className='slbl';}
+    if(i<4){const ln=document.getElementById('l'+i);if(ln)ln.classList.toggle('done',i<curr);}
+  }
+}
+async function cancelRide(){
+  if(document.getElementById('trackingScreen').classList.contains('active')){
+    if(!confirm('Cancel this ride?'))return;
+    if(S.currentTripId){
+      await db.ref('trips/'+S.currentTripId+'/status').set('cancelled');
+      await db.ref('trips/'+S.currentTripId+'/cancelledAt').set(Date.now());
+      const snap=await db.ref('trips/'+S.currentTripId).once('value');const t=snap.val();
+      if(t?.payMethod==='Wallet'&&t?.fare){S.wallet+=parseFloat(t.fare)||0;await db.ref('riders/'+S.uid+'/wallet').set(S.wallet);updateUI();}
+      if(t?.driverId)await db.ref('notifications/'+t.driverId).push({type:'trip',msg:'Rider cancelled the trip.',ts:Date.now(),read:false});
+    }
+  }
+  cleanupTripListeners();goTo('home');toast('Ride cancelled','🚫');
+}
+async function finishTrip(trip){
+  stopETA();cleanupTripListeners();
+  await db.ref('riders/'+S.uid).update({trips:firebase.database.ServerValue.increment(1)});
+  document.getElementById('ratingTitle').textContent='Rate your trip with '+(trip.driverName||'driver');
+  setTimeout(()=>openM('ratingModal'),700);
+  loadHistory();loadProfileStats();
+}
+function cleanupTripListeners(){
+  if(tripListener&&S.currentTripId){db.ref('trips/'+S.currentTripId).off('value',tripListener);tripListener=null;}
+  if(chatListener&&S.currentTripId){db.ref('chats/'+S.currentTripId).off('child_added',chatListener);chatListener=null;}
+  if(S.locationPoll){clearInterval(S.locationPoll);S.locationPoll=null;}
+  stopETA();
+}
+function callDriver(){toast('Calling '+(S.currentDriver?.name||'driver')+'...','📞');}
+function shareTrip(){const txt='I\'m in a ZAP Ride to '+(document.getElementById('dropInp').value||'my destination')+'!';if(navigator.share)navigator.share({title:'ZAP Ride',text:txt});else{try{navigator.clipboard.writeText(txt).then(()=>toast('Trip details copied!','📤'));}catch(e){}}}
+async function triggerSOS(){if(!confirm('Send SOS alert to emergency contacts and admin?'))return;await db.ref('reports').push({from:'rider',rider:S.uid,riderName:S.user?.name,type:'sos',tripId:S.currentTripId,ts:Date.now()});toast('SOS sent! Help is on the way.','🚨');}
+
+// ── CHAT ──
+function listenForChat(tripId){
+  if(!tripId)return;
+  chatListener=db.ref('chats/'+tripId).on('child_added',snap=>{
+    const m=snap.val();if(m?.from==='driver'){const box=document.getElementById('chatBox');const el=document.createElement('div');el.className='chat-msg msg-in';el.textContent=m.msg;box.appendChild(el);box.scrollTop=box.scrollHeight;}
+  });
+}
+async function sendChat(){
+  const inp=document.getElementById('chatInp'),msg=inp.value.trim();if(!msg||!S.currentTripId)return;
+  const box=document.getElementById('chatBox');const el=document.createElement('div');el.className='chat-msg msg-out';el.textContent=msg;box.appendChild(el);box.scrollTop=box.scrollHeight;inp.value='';
+  await db.ref('chats/'+S.currentTripId).push({from:'rider',name:S.user?.name,msg,ts:Date.now()});
+}
+
+// ── RATING ──
+function setRating(n){S.rating=n;document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('lit',i<n));}
+async function submitRating(){
+  if(!S.rating){toast('Please select a rating','⚠️');return;}
+  if(S.currentTripId){
+    await db.ref('ratings').push({riderId:S.uid,riderName:S.user?.name,rating:S.rating,note:document.getElementById('rNote').value,tripId:S.currentTripId,driverName:S.currentDriver?.name,ts:Date.now()});
+    await db.ref('trips/'+S.currentTripId+'/riderRating').set(S.rating);
+    // Update driver average rating
+    const tSnap=await db.ref('trips/'+S.currentTripId).once('value');const t=tSnap.val();
+    if(t?.driverId){const rSnap=await db.ref('ratings').orderByChild('driverName').equalTo(t.driverName).once('value');const ratings=rSnap.val()?Object.values(rSnap.val()):[];const avg=(ratings.reduce((s,r)=>s+(r.rating||0),0)/ratings.length).toFixed(2);await db.ref('drivers/'+t.driverId+'/rating').set(avg);}
+  }
+  closeM('ratingModal');S.rating=0;document.querySelectorAll('.star').forEach(s=>s.classList.remove('lit'));document.getElementById('rNote').value='';
+  S.currentTripId=null;S.currentDriver=null;
+  toast('Thank you for rating!','⭐');goTo('home');
+}
+
+// ── HISTORY ──
+async function loadHistory(){
+  const snap=await db.ref('trips').orderByChild('riderId').equalTo(S.uid).once('value');
+  const trips=snap.val()?Object.entries(snap.val()).sort(([,a],[,b])=>(b.createdAt||0)-(a.createdAt||0)):[];
+  const done=trips.filter(([,t])=>t.status==='completed').length;
+  document.getElementById('histMeta').textContent=trips.length+' trips · '+done+' completed';
+  document.getElementById('histList').innerHTML=trips.length
+    ?trips.map(([id,t])=>`<div class="tc"><div class="tc-top"><div class="tc-date">${t.createdAt?new Date(t.createdAt).toLocaleDateString():'—'} · ${t.rideType||'Economy'}</div><div class="tc-fare">${zmw(t.fare||0)}</div></div><div class="tc-route"><span>${(t.pickupAddress||'Pickup').split(',')[0]}</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--mt)" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg><span>${(t.dropoffAddress||'Dropoff').split(',')[0]}</span></div><span class="tc-badge ${t.status==='completed'?'b-ok':'b-bad'}">${t.status==='completed'?'✓ Completed':'✕ '+t.status}</span></div>`).join('')
+    :'<div class="empty-state">No trips yet. Book your first ride!</div>';
+}
+
+// ── NOTIFICATIONS ──
+function pushNotif(text,unread=true){notifs.unshift({text,t:'Just now',unread,ts:Date.now()});if(notifs.length>30)notifs.pop();if(unread){const d=document.getElementById('nDot');d.textContent=notifs.filter(n=>n.unread).length;d.classList.add('show');}}
+function renderNotifs(){document.getElementById('nDot').classList.remove('show');notifs.forEach(n=>n.unread=false);document.getElementById('notifList').innerHTML=notifs.length?notifs.map(n=>`<div class="notif-item ${n.unread?'unread':''}"><div>${n.text}</div><div class="notif-time">${n.t}</div></div>`).join(''):'<div class="empty-state">No notifications yet</div>';}
+
+// ── REAL-TIME LISTENERS ──
+function initRiderListeners(){
+  db.ref('riders/'+S.uid).on('value',snap=>{const r=snap.val();if(!r)return;S.user=r;S.wallet=r.wallet||0;updateUI();});
+  notifListener=db.ref('notifications/'+S.uid).orderByChild('read').equalTo(false).on('child_added',snap=>{const n=snap.val();if(!n||n.ts<Date.now()-300000)return;pushNotif(n.msg,true);toast(n.msg,n.type==='ride'?'🚗':n.type==='trip'?'✅':'🔔');db.ref('notifications/'+S.uid+'/'+snap.key+'/read').set(true);});
+  db.ref('config/pricing').on('value',snap=>{const p=snap.val();if(!p)return;const was=S.surgeMultiplier>1;S.surgeMultiplier=p.surgeActive?parseFloat(p.surge||1.5):1.0;if(p.surgeActive){document.getElementById('surgeText').textContent=`Surge pricing active (${S.surgeMultiplier}x) — fares temporarily higher`;document.getElementById('surgeBanner').classList.add('show');}else document.getElementById('surgeBanner').classList.remove('show');renderRideOpts();});
+  db.ref('config/platform').on('value',snap=>{const p=snap.val();if(!p)return;S.maintenanceMode=!!p.maintenance;document.getElementById('maintBanner').classList.toggle('show',S.maintenanceMode);});
+  db.ref('broadcasts').orderByChild('ts').limitToLast(1).on('child_added',snap=>{const b=snap.val();if(!b||b.ts<Date.now()-30000)return;if(b.target==='drivers')return;document.getElementById('broadcastText').textContent=b.msg;document.getElementById('broadcastBanner').classList.add('show');pushNotif('Admin: '+b.msg,true);setTimeout(()=>document.getElementById('broadcastBanner').classList.remove('show'),10000);});
+  // Also refresh nearby drivers every 30 seconds
+  setInterval(()=>{if(document.getElementById('homeScreen').classList.contains('active'))showNearbyDrivers();},30000);
+}
+function cleanupListeners(){
+  if(S.uid){db.ref('riders/'+S.uid).off();db.ref('notifications/'+S.uid).off();db.ref('config/pricing').off();db.ref('config/platform').off();db.ref('broadcasts').off();}
+  cleanupTripListeners();
+}
+
+// ── MISC ──
+function copyRef(){const c=document.getElementById('refCode').textContent;try{navigator.clipboard.writeText(c).then(()=>toast('Referral code copied!','🎁'));}catch(e){toast('Your code: '+c,'🎁');}}
+function openHelp(){window.open('mailto:support@zaprides.app','_blank');}
+function openSafety(){toast('Emergency: 999 · 112 · SOS available during active trips','🛡️');}
+function goTo(s){
+  document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
+  const m={home:'homeScreen',tracking:'trackingScreen',history:'historyScreen',profile:'profileScreen',auth:'authScreen'};
+  document.getElementById(m[s])?.classList.add('active');
+  if(s==='history')loadHistory();if(s==='profile'){updateUI();loadProfileStats();}
+  if(s==='home'&&riderMap){google.maps?.event?.trigger(riderMap,'resize');showNearbyDrivers();}
+}
+function openM(id){document.getElementById(id).classList.add('open');if(id==='notifModal')renderNotifs();if(id==='walletModal')document.getElementById('wModalBal').textContent=zmw(S.wallet);}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+function toast(msg,icon=''){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t=document.createElement('div');t.className='toast';t.innerHTML=icon?`<span>${icon}</span> ${msg}`:msg;
+  document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translate(-50%,10px)';t.style.transition='.28s';setTimeout(()=>t.remove(),280);},3000);
+}
+window.addEventListener('load',()=>{setTimeout(()=>{if(!S.uid)goTo('auth');},1900);});
+</script>
+</body>
+</html>
